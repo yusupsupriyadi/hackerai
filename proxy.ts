@@ -56,6 +56,7 @@ const UNAUTHENTICATED_PATHS = new Set([
   "/api/subscription/webhook",
   "/api/influencers/webhook",
   "/api/workos/webhook",
+  "/api/polar/webhook",
   "/callback",
   "/desktop-login",
   "/desktop-callback",

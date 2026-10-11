@@ -28,6 +28,7 @@ import { ExtraUsageSection } from "@/app/components/ExtraUsageSection";
 import { TeamExtraUsageSection } from "@/app/components/TeamExtraUsageSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useGlobalState } from "@/app/contexts/GlobalState";
+import { isPolarBilling } from "@/lib/billing/provider";
 
 // Keep the widget runtime and its vendor styles out of the initial app bundle.
 const SecurityTab = dynamic(
@@ -123,7 +124,8 @@ const SettingsDialog = ({
             agentsTab,
             localSandboxTab,
             usageTab,
-            extraUsageTab,
+            // Extra usage is billed through Stripe only.
+            ...(isPolarBilling() ? [] : [extraUsageTab]),
             accountTab,
           ]
         : [...baseTabs, agentsTab, localSandboxTab, accountTab];

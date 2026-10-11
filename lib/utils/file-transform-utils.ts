@@ -1031,12 +1031,48 @@ export const processMessageFiles = async (
     allowLocalDesktopFiles,
   );
 
+  if (process.env.INLINE_FILE_URLS_FOR_MODELS === "true") {
+    await inlineStoredMediaForProvider(updatedMessages);
+  }
+
   return {
     messages: updatedMessages,
     hasMediaFiles: hasMedia,
     sandboxFiles,
     containsPdfFiles: containsPdfAttachments(updatedMessages),
   };
+};
+
+/**
+ * Self-hosted storage is unreachable from cloud model providers, so stored
+ * images and PDFs travel to the provider inline. This runs after sandbox files
+ * are collected, which keep downloading from the signed URL. Only parts with a
+ * fileId are fetched: their URL was issued by our storage, never by the client.
+ */
+const inlineStoredMediaForProvider = async (messages: UIMessage[]) => {
+  const dataUrls = new Map<string, Promise<string>>();
+  const parts = messages
+    .flatMap((message) => (message.parts ?? []) as any[])
+    .filter(
+      (part) =>
+        part.type === "file" &&
+        part.fileId &&
+        typeof part.url === "string" &&
+        /^https?:\/\//i.test(part.url) &&
+        isMediaFile(part.mediaType),
+    );
+
+  await Promise.all(
+    parts.map(async (part) => {
+      const url: string = part.url;
+      let dataUrl = dataUrls.get(url);
+      if (!dataUrl) {
+        dataUrl = convertUrlToBase64DataUrl(url, part.mediaType);
+        dataUrls.set(url, dataUrl);
+      }
+      part.url = await dataUrl;
+    }),
+  );
 };
 
 const filterNonMediaFileIds = (

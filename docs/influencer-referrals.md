@@ -1,8 +1,8 @@
 # Influencer referrals
 
 Influencer links use `/r/<code>`, for example `https://hackerai.co/r/medusa`.
-An operator creates each partner; influencers do not need a paid HackerAI plan.
-Use their HackerAI account email when creating the partner so self-referrals
+An operator creates each partner; influencers do not need a paid DiggerAI plan.
+Use their DiggerAI account email when creating the partner so self-referrals
 are excluded. Links are case-insensitive; codes contain 2–24 lowercase letters,
 digits, or hyphens and cannot be reused.
 

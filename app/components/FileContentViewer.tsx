@@ -3,9 +3,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { isPdfFile, isTextViewableFile } from "@/lib/utils/file-utils";
+import {
+  canPreviewFile,
+  isMarkdownFile,
+  isPdfFile,
+} from "@/lib/utils/file-utils";
 import { LocalDesktopFile } from "@/types/file";
 import { useFileUrlCacheContext } from "../contexts/FileUrlCacheContext";
+import { MemoizedMarkdown } from "./MemoizedMarkdown";
+import { downloadFileFromUrl } from "./file-download";
 
 const isBrowserFile = (file: File | LocalDesktopFile): file is File =>
   typeof globalThis.File !== "undefined" && file instanceof globalThis.File;
@@ -14,39 +20,28 @@ const isBrowserFile = (file: File | LocalDesktopFile): file is File =>
 const MAX_PREVIEW_CHARS = 500_000;
 const PDF_MAGIC_BYTES = "%PDF-";
 
-async function hasPdfMagicBytes(file: File): Promise<boolean> {
+async function hasPdfMagicBytes(file: Blob): Promise<boolean> {
   const header = await file.slice(0, PDF_MAGIC_BYTES.length).text();
   return header === PDF_MAGIC_BYTES;
 }
 
-interface FileContentViewerProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface FileSourceProps {
   file: File | LocalDesktopFile;
   fileName: string;
   /**
-   * S3 file id for attachments restored from a draft after reload, where the
-   * in-memory File (and its content) is no longer available.
+   * S3 file id for files whose content is not in memory: draft attachments
+   * restored after reload and files already sent in a chat.
    */
   fileId?: string;
+  /** Already-resolved URL, used when there is no file id to resolve. */
+  url?: string;
 }
 
-export const FileContentViewer = ({
-  isOpen,
-  onClose,
-  file,
-  fileName,
-  fileId,
-}: FileContentViewerProps) => {
+function useResolveFileUrl() {
   const getFileUrlAction = useAction(api.s3Actions.getFileUrlAction);
   const fileUrlCache = useFileUrlCacheContext();
-  const [content, setContent] = useState<string>("");
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [truncated, setTruncated] = useState<boolean>(false);
 
-  const resolveFileUrl = useCallback(
+  return useCallback(
     async (id: string): Promise<string | null> => {
       const cachedUrl = fileUrlCache?.getCachedUrl(id);
       if (cachedUrl) return cachedUrl;
@@ -57,12 +52,59 @@ export const FileContentViewer = ({
     },
     [fileUrlCache, getFileUrlAction],
   );
+}
+
+export function useFileDownload({
+  file,
+  fileName,
+  fileId,
+  url,
+}: FileSourceProps) {
+  const resolveFileUrl = useResolveFileUrl();
+
+  const download = useCallback(async () => {
+    if (isBrowserFile(file)) {
+      const blobUrl = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      return;
+    }
+
+    const downloadUrl = fileId ? await resolveFileUrl(fileId) : url;
+    if (downloadUrl) await downloadFileFromUrl(downloadUrl, fileName);
+  }, [file, fileName, fileId, url, resolveFileUrl]);
+
+  return { download, canDownload: isBrowserFile(file) || !!fileId || !!url };
+}
+
+interface FilePreviewBodyProps extends FileSourceProps {
+  /** Offered as a fallback when the preview cannot be shown. */
+  onDownload?: () => void;
+}
+
+/** Loads a file and shows it as a PDF, rendered Markdown, or plain text. */
+export const FilePreviewBody = ({
+  file,
+  fileName,
+  fileId,
+  url,
+  onDownload,
+}: FilePreviewBodyProps) => {
+  const resolveFileUrl = useResolveFileUrl();
+  const [content, setContent] = useState<string>("");
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [truncated, setTruncated] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!isOpen) return;
-
     let cancelled = false;
-    // Blob URL created for in-memory PDF previews; must be revoked on cleanup.
+    // Blob URL created for PDF previews; must be revoked on cleanup.
     let createdBlobUrl: string | null = null;
 
     const loadContent = async () => {
@@ -72,15 +114,11 @@ export const FileContentViewer = ({
       setPdfUrl(null);
       setContent("");
 
-      const pdf = isPdfFile(file);
-
       // Previewability is based on name/media type, so it works for both real
-      // browser Files and the metadata-only descriptor restored from a draft.
-      // Without an in-memory File or an S3 file id there is nothing to read.
-      if (
-        (!pdf && !isTextViewableFile(file)) ||
-        (!isBrowserFile(file) && !fileId)
-      ) {
+      // browser Files and metadata-only descriptors (restored drafts and files
+      // already sent in a chat). Without an in-memory File or a way to fetch
+      // the content there is nothing to read.
+      if (!canPreviewFile(file) || (!isBrowserFile(file) && !fileId && !url)) {
         if (!cancelled) {
           setError("Preview isn't available for this file type.");
           setIsLoading(false);
@@ -89,48 +127,40 @@ export const FileContentViewer = ({
       }
 
       try {
-        if (pdf) {
-          // Render via the browser's native PDF viewer. In-memory files use a
-          // blob URL; restored-from-draft files use a short-lived signed URL.
-          let url: string;
-          if (isBrowserFile(file)) {
-            if (!(await hasPdfMagicBytes(file))) {
-              throw new Error("Invalid PDF signature");
-            }
-            createdBlobUrl = URL.createObjectURL(file);
-            url = createdBlobUrl;
-          } else {
-            const signedUrl = await resolveFileUrl(fileId!);
-            if (!signedUrl) throw new Error("Could not resolve file URL");
-            url = signedUrl;
-          }
-
-          if (cancelled) {
-            if (createdBlobUrl) URL.revokeObjectURL(createdBlobUrl);
-            return;
-          }
-
-          setPdfUrl(url);
-          return;
-        }
-
-        let text: string;
-
+        let source: Blob;
         if (isBrowserFile(file)) {
-          text = await file.text();
+          source = file;
         } else {
-          // Restored-from-draft attachment: fetch content from storage using a
-          // short-lived signed URL keyed by the file id.
-          const url = await resolveFileUrl(fileId!);
-          if (!url) throw new Error("Could not resolve file URL");
+          // Fetch from storage through a short-lived signed URL keyed by the
+          // file id, or through the URL the caller already resolved.
+          const remoteUrl = fileId ? await resolveFileUrl(fileId) : url;
+          if (!remoteUrl) throw new Error("Could not resolve file URL");
 
-          const response = await fetch(url);
+          const response = await fetch(remoteUrl);
           if (!response.ok) {
             throw new Error(`Failed to fetch file (${response.status})`);
           }
-          text = await response.text();
+          source = await response.blob();
         }
 
+        if (isPdfFile(file)) {
+          // Render via the browser's native PDF viewer from a blob URL. The
+          // signature check keeps other content out of the iframe, and the
+          // blob is always typed application/pdf so the browser never treats
+          // it as HTML, whatever type the file or storage declared.
+          if (!(await hasPdfMagicBytes(source))) {
+            throw new Error("Invalid PDF signature");
+          }
+          if (cancelled) return;
+
+          createdBlobUrl = URL.createObjectURL(
+            source.slice(0, source.size, "application/pdf"),
+          );
+          setPdfUrl(createdBlobUrl);
+          return;
+        }
+
+        const text = await source.text();
         if (cancelled) return;
 
         if (text.length > MAX_PREVIEW_CHARS) {
@@ -152,7 +182,95 @@ export const FileContentViewer = ({
       cancelled = true;
       if (createdBlobUrl) URL.revokeObjectURL(createdBlobUrl);
     };
-  }, [isOpen, file, fileId, resolveFileUrl]);
+  }, [file, fileId, url, resolveFileUrl]);
+
+  const truncatedNotice = truncated && (
+    <p className="mt-4 text-xs italic text-muted-foreground">
+      Preview truncated. Download the file to view its full contents.
+    </p>
+  );
+
+  return (
+    <div className="relative flex min-h-0 w-full flex-1">
+      {isLoading ? (
+        <div className="flex h-full w-full items-center justify-center">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : error ? (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center">
+          <FileText
+            className="size-10 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <p className="text-sm text-muted-foreground">{error}</p>
+          {onDownload && (
+            <button
+              type="button"
+              onClick={onDownload}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
+            >
+              <Download className="size-4" aria-hidden="true" />
+              Download
+            </button>
+          )}
+        </div>
+      ) : pdfUrl ? (
+        // Chromium's PDF viewer can fail inside sandboxed iframes. The PDF
+        // path is gated above by magic bytes and an application/pdf blob type.
+        <iframe
+          src={pdfUrl}
+          title={`Preview of ${fileName}`}
+          className="h-full w-full border-0"
+        />
+      ) : !content ? (
+        <div className="flex h-full w-full items-center justify-center px-6 text-center">
+          <p className="text-sm text-muted-foreground">This file is empty.</p>
+        </div>
+      ) : isMarkdownFile(file) ? (
+        // Same renderer and prose styles as assistant messages, at the
+        // chat column's reading width.
+        <div className="w-full overflow-auto">
+          <div className="prose mx-auto w-full min-w-0 max-w-3xl space-y-3 px-4 py-6 text-foreground dark:prose-invert md:px-8">
+            <MemoizedMarkdown content={content} />
+            {truncatedNotice}
+          </div>
+        </div>
+      ) : (
+        <div
+          className="w-full overflow-auto px-4 py-[15px] font-mono text-xs leading-[18px] text-foreground"
+          style={{
+            overflowWrap: "break-word",
+            wordBreak: "normal",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          <pre className="max-w-full whitespace-pre-wrap">{content}</pre>
+          {truncatedNotice}
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface FileContentViewerProps extends FileSourceProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const FileContentViewer = ({
+  isOpen,
+  onClose,
+  file,
+  fileName,
+  fileId,
+  url,
+}: FileContentViewerProps) => {
+  const { download, canDownload } = useFileDownload({
+    file,
+    fileName,
+    fileId,
+    url,
+  });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -165,32 +283,11 @@ export const FileContentViewer = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  const handleDownload = useCallback(async () => {
-    if (isBrowserFile(file)) {
-      const blobUrl = URL.createObjectURL(file);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-      return;
-    }
-
-    if (fileId) {
-      const url = await resolveFileUrl(fileId);
-      if (url) window.open(url, "_blank", "noopener,noreferrer");
-    }
-  }, [file, fileName, fileId, resolveFileUrl]);
-
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
 
   if (!isOpen) return null;
-
-  const canDownload = isBrowserFile(file) || !!fileId;
 
   return (
     <div
@@ -221,7 +318,7 @@ export const FileContentViewer = ({
             {canDownload && (
               <button
                 type="button"
-                onClick={handleDownload}
+                onClick={download}
                 aria-label="Download file"
                 className="flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-accent"
               >
@@ -234,6 +331,8 @@ export const FileContentViewer = ({
             <button
               type="button"
               onClick={onClose}
+              // Moves keyboard focus into the dialog when it opens.
+              autoFocus
               aria-label="Close file preview"
               className="flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-accent"
             >
@@ -245,56 +344,13 @@ export const FileContentViewer = ({
           </div>
         </header>
 
-        <div className="relative flex min-h-0 w-full flex-1">
-          {isLoading ? (
-            <div className="flex h-full w-full items-center justify-center">
-              <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : error ? (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center">
-              <FileText
-                className="size-10 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <p className="text-sm text-muted-foreground">{error}</p>
-              {canDownload && (
-                <button
-                  type="button"
-                  onClick={handleDownload}
-                  className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
-                >
-                  <Download className="size-4" aria-hidden="true" />
-                  Download
-                </button>
-              )}
-            </div>
-          ) : pdfUrl ? (
-            // Chromium's PDF viewer can fail inside sandboxed iframes. The PDF
-            // path is gated above by MIME type and magic bytes before blob URL creation.
-            <iframe
-              src={pdfUrl}
-              title={`Preview of ${fileName}`}
-              className="h-full w-full border-0"
-            />
-          ) : (
-            <div
-              className="w-full overflow-auto px-4 py-[15px] font-mono text-xs leading-[18px] text-foreground"
-              style={{
-                overflowWrap: "break-word",
-                wordBreak: "normal",
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              <pre className="max-w-full whitespace-pre-wrap">{content}</pre>
-              {truncated && (
-                <p className="mt-4 text-xs italic text-muted-foreground">
-                  Preview truncated — download the file to view its full
-                  contents.
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+        <FilePreviewBody
+          file={file}
+          fileName={fileName}
+          fileId={fileId}
+          url={url}
+          onDownload={canDownload ? download : undefined}
+        />
       </div>
     </div>
   );

@@ -27,7 +27,7 @@ const { AgentApprovalPrompt, getApprovalPurpose } = jest.requireActual<
 const request = {
   approvalId: "approval-1",
   toolCallId: "tool-1",
-  title: "Allow HackerAI to run this terminal command?",
+  title: "Allow DiggerAI to run this terminal command?",
   target: "ping -c 4 hackerone.com",
   justification: "Check whether the target host is reachable.",
   prefixRule: ["ping", "-c", "4"],
@@ -177,7 +177,7 @@ describe("AgentApprovalPrompt", () => {
           autoReview: {
             verdict: "ask_user",
             riskCategory: "unknown",
-            rationale: "HackerAI could not review this action in time.",
+            rationale: "DiggerAI could not review this action in time.",
             rolloutPhase: "enforce",
             failureClass: "timeout",
           },

@@ -659,7 +659,7 @@ Browser automation is host-dependent on this connection. Chromium and agent-brow
     }> => {
       if (opts?.stdin !== undefined && !this.supportsCommandStdin()) {
         throw new Error(
-          "Command stdin requires an updated HackerAI local client",
+          "Command stdin requires an updated DiggerAI local client",
         );
       }
       const commandId = crypto.randomUUID();

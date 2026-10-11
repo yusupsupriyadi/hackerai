@@ -831,7 +831,7 @@ describe("CentrifugoSandbox", () => {
 
       await expect(
         sandbox.commands.run("cat", { stdin: "private" }),
-      ).rejects.toThrow("requires an updated HackerAI local client");
+      ).rejects.toThrow("requires an updated DiggerAI local client");
       expect(mockSubscriptions).toHaveLength(0);
     });
 

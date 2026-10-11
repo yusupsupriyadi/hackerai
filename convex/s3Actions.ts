@@ -12,7 +12,10 @@ import { validateServiceKey } from "./lib/utils";
 import { convexLogger } from "./lib/logger";
 import { checkFileUploadRateLimit } from "./fileActions";
 import { validateUploadPolicy } from "../lib/utils/upload-policy";
-import { hasPaidEntitlement } from "../lib/auth/entitlements";
+import {
+  hasPaidEntitlement,
+  parseEntitlements,
+} from "../lib/auth/entitlements";
 
 type StorageUsage = {
   usedBytes: number;
@@ -91,13 +94,7 @@ const getIdentityEntitlements = (identity: unknown) => {
     return [];
   }
 
-  const entitlements = identity.entitlements;
-  return Array.isArray(entitlements)
-    ? entitlements.filter(
-        (entitlement: unknown): entitlement is string =>
-          typeof entitlement === "string",
-      )
-    : [];
+  return parseEntitlements(identity.entitlements);
 };
 
 /**

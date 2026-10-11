@@ -1,11 +1,13 @@
-const GITHUB_RELEASE_BASE =
-  "https://github.com/hackerai-tech/hackerai/releases/latest/download";
+// DiggerAI desktop builds are not published yet, so every desktop download
+// points at the download page, which says so. Swap in real release URLs once
+// DiggerAI builds exist.
+const DOWNLOAD_PAGE = "/download";
 
 export const downloadLinks = {
-  macos: `${GITHUB_RELEASE_BASE}/HackerAI-universal.dmg`,
-  windows: `${GITHUB_RELEASE_BASE}/HackerAI-windows-x64.exe`,
-  linuxAppImage: `${GITHUB_RELEASE_BASE}/HackerAI-linux-x64.AppImage`,
-  linuxArm64AppImage: `${GITHUB_RELEASE_BASE}/HackerAI-linux-arm64.AppImage`,
-  linuxDeb: `${GITHUB_RELEASE_BASE}/HackerAI-linux-x64.deb`,
-  linuxArm64Deb: `${GITHUB_RELEASE_BASE}/HackerAI-linux-arm64.deb`,
+  macos: DOWNLOAD_PAGE,
+  windows: DOWNLOAD_PAGE,
+  linuxAppImage: DOWNLOAD_PAGE,
+  linuxArm64AppImage: DOWNLOAD_PAGE,
+  linuxDeb: DOWNLOAD_PAGE,
+  linuxArm64Deb: DOWNLOAD_PAGE,
 };

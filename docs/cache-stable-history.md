@@ -53,7 +53,7 @@ startup-compaction ladder is unchanged.
 This follows [DeepSeek's aligned summarization](https://github.com/deepseek-ai/deepseek-harness/blob/ddefc45fbc7f8e46dd73185e68295696d1297887/packages/compaction/compaction-basic/src/summarizer.ts)
 and append-only context approach, and [Hermes's private API-content replay](https://github.com/NousResearch/hermes-agent/blob/6159bf4d87a32de72869e0b479606ddd2b9977a1/tests/agent/test_api_content_sidecar.py)
 and frozen prompt snapshots. It does not copy their thresholds or claim their
-reported savings transfer to HackerAI.
+reported savings transfer to DiggerAI.
 
 ## Rollout and verification
 

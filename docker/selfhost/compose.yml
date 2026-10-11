@@ -1,0 +1,290 @@
+# Self-hosted HackerAI services for one machine. See docs/self-hosting.md.
+#
+# Every published port binds to 127.0.0.1. Containers reach each other by
+# service name; `trigger-s2` is also mapped to 127.0.0.1 in the host's
+# hosts file because Agent output streams must resolve on the host and in
+# containers alike.
+#
+# Secrets come from docker/selfhost/.env, written by `pnpm selfhost:setup`.
+
+name: hackerai-selfhost
+
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 20m
+    max-file: "5"
+
+services:
+  # The database and backend are Convex cloud (CONVEX_URL); see docs/self-hosting.md.
+
+  # --- Storage -----------------------------------------------------------------
+  # Uploaded files and Trigger.dev payloads live in Cloudflare R2, outside
+  # this stack; only Redis runs here.
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - 127.0.0.1:6379:6379
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Sandbox relay -----------------------------------------------------------
+  centrifugo:
+    image: centrifugo/centrifugo:v5
+    restart: unless-stopped
+    logging: *logging
+    command: centrifugo -c config.json
+    ports:
+      - 127.0.0.1:8000:8000
+    environment:
+      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_SECRET:?run pnpm selfhost:setup}
+      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:?run pnpm selfhost:setup}
+    volumes:
+      - ../centrifugo/config.json:/centrifugo/config.json:ro
+
+  # Agent command sandbox: the Kali image running the HackerAI local client.
+  # Start it after copying a connect token: `pnpm selfhost:sandbox`.
+  sandbox:
+    profiles: ["sandbox"]
+    build:
+      context: ../..
+      dockerfile: docker/selfhost/sandbox/Dockerfile
+    # The app labels an environment by its hostname.
+    hostname: docker-sandbox
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      HACKERAI_LOCAL_TOKEN: ${HACKERAI_LOCAL_TOKEN:-}
+      # Convex cloud deployment URL, copied from .env.local by the setup.
+      HACKERAI_CONVEX_URL: ${CONVEX_URL:-}
+      HACKERAI_LOCAL_NAME: docker-sandbox
+    volumes:
+      - sandbox-identity:/home/user/.hackerai
+
+  # --- Trigger.dev (Agent runtime) ---------------------------------------------
+  # Adapted from Trigger.dev v4.6.3 hosting/docker/webapp/docker-compose.yml.
+  # Tasks run on the host via `trigger dev`, so the registry and supervisor
+  # (deployed workers) are omitted.
+  trigger-webapp:
+    image: ghcr.io/triggerdotdev/trigger.dev:${TRIGGER_IMAGE_TAG:-v4.6.3}
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - 127.0.0.1:8030:3000
+    depends_on:
+      trigger-postgres:
+        condition: service_healthy
+      trigger-redis:
+        condition: service_healthy
+      trigger-clickhouse:
+        condition: service_healthy
+      trigger-s2:
+        condition: service_started
+    volumes:
+      - trigger-shared:/home/node/shared
+    user: root
+    command: sh -c "chown -R node:node /home/node/shared && exec ./scripts/entrypoint.sh"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "http.get('http://localhost:3000/healthcheck', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    environment:
+      APP_ORIGIN: http://localhost:8030
+      LOGIN_ORIGIN: http://localhost:8030
+      API_ORIGIN: http://localhost:8030
+      ELECTRIC_ORIGIN: http://trigger-electric:3000
+      REALTIME_STREAMS_DEFAULT_VERSION: v2
+      REALTIME_STREAMS_S2_BASIN: trigger-realtime
+      # Handed to the `trigger dev` worker on the host as well, so this host
+      # must resolve there too (hosts entry, see docs/self-hosting.md).
+      REALTIME_STREAMS_S2_ENDPOINT: http://trigger-s2:9330/v1
+      REALTIME_STREAMS_S2_SKIP_ACCESS_TOKENS: "true"
+      DATABASE_URL: postgresql://postgres:${TRIGGER_POSTGRES_PASSWORD}@trigger-postgres:5432/main?schema=public&sslmode=disable
+      DIRECT_URL: postgresql://postgres:${TRIGGER_POSTGRES_PASSWORD}@trigger-postgres:5432/main?schema=public&sslmode=disable
+      SESSION_SECRET: ${TRIGGER_SESSION_SECRET:?run pnpm selfhost:setup}
+      MAGIC_LINK_SECRET: ${TRIGGER_MAGIC_LINK_SECRET:?run pnpm selfhost:setup}
+      ENCRYPTION_KEY: ${TRIGGER_ENCRYPTION_KEY:?run pnpm selfhost:setup}
+      PROVIDER_SECRET: ${TRIGGER_PROVIDER_SECRET:?run pnpm selfhost:setup}
+      COORDINATOR_SECRET: ${TRIGGER_COORDINATOR_SECRET:?run pnpm selfhost:setup}
+      MANAGED_WORKER_SECRET: ${TRIGGER_MANAGED_WORKER_SECRET:?run pnpm selfhost:setup}
+      REDIS_HOST: trigger-redis
+      REDIS_PORT: 6379
+      REDIS_TLS_DISABLED: "true"
+      APP_LOG_LEVEL: info
+      DEV_OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:8030/otel
+      # Required at startup even though deploys (and the registry) are unused.
+      DEPLOY_REGISTRY_HOST: localhost:5000
+      DEPLOY_REGISTRY_NAMESPACE: trigger
+      # Trigger.dev uses the first path segment of each key as the bucket, so
+      # payloads land in the R2 bucket named "packets".
+      OBJECT_STORE_BASE_URL: https://${R2_ACCOUNT_ID:?set R2 values in docker/selfhost/.env (docs/self-hosting.md)}.r2.cloudflarestorage.com
+      OBJECT_STORE_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?set R2 values in docker/selfhost/.env (docs/self-hosting.md)}
+      OBJECT_STORE_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?set R2 values in docker/selfhost/.env (docs/self-hosting.md)}
+      OBJECT_STORE_REGION: auto
+      GRACEFUL_SHUTDOWN_TIMEOUT: 1000
+      TRIGGER_BOOTSTRAP_ENABLED: 1
+      TRIGGER_BOOTSTRAP_WORKER_GROUP_NAME: bootstrap
+      TRIGGER_BOOTSTRAP_WORKER_TOKEN_PATH: /home/node/shared/worker_token
+      CLICKHOUSE_URL: http://default:${TRIGGER_CLICKHOUSE_PASSWORD}@trigger-clickhouse:8123?secure=false
+      CLICKHOUSE_LOG_LEVEL: info
+      RUN_REPLICATION_ENABLED: 1
+      RUN_REPLICATION_CLICKHOUSE_URL: http://default:${TRIGGER_CLICKHOUSE_PASSWORD}@trigger-clickhouse:8123
+      RUN_REPLICATION_LOG_LEVEL: info
+      INTERNAL_OTEL_TRACE_LOGGING_ENABLED: 0
+
+  trigger-postgres:
+    image: postgres:14
+    restart: unless-stopped
+    logging: *logging
+    command: ["-c", "wal_level=logical"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${TRIGGER_POSTGRES_PASSWORD:?run pnpm selfhost:setup}
+      POSTGRES_DB: postgres
+    volumes:
+      - trigger-postgres:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  trigger-redis:
+    image: redis:7
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - trigger-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  trigger-electric:
+    image: electricsql/electric:1.2.4
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      trigger-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${TRIGGER_POSTGRES_PASSWORD}@trigger-postgres:5432/main?schema=public&sslmode=disable
+      ELECTRIC_INSECURE: "true"
+      ELECTRIC_USAGE_REPORTING: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  trigger-clickhouse:
+    image: clickhouse/clickhouse-server:26.2
+    restart: unless-stopped
+    logging: *logging
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${TRIGGER_CLICKHOUSE_PASSWORD:?run pnpm selfhost:setup}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - trigger-clickhouse:/var/lib/clickhouse
+      - ./trigger/clickhouse/data-paths.xml:/etc/clickhouse-server/config.d/data-paths.xml:ro
+      - ./trigger/clickhouse/override.xml:/etc/clickhouse-server/config.d/override.xml:ro
+      - ./trigger/clickhouse/users-override.xml:/etc/clickhouse-server/users.d/override.xml:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "clickhouse-client",
+          "--host",
+          "localhost",
+          "--port",
+          "9000",
+          "--user",
+          "default",
+          "--password",
+          "${TRIGGER_CLICKHOUSE_PASSWORD}",
+          "--query",
+          "SELECT 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  trigger-s2-init:
+    image: busybox:1.37
+    restart: "no"
+    logging: *logging
+    command:
+      - sh
+      - -c
+      - |
+        cat > /config/s2-spec.json <<JSON
+        {
+          "basins": [
+            {
+              "name": "trigger-realtime",
+              "config": { "create_stream_on_append": true, "create_stream_on_read": true }
+            }
+          ]
+        }
+        JSON
+    volumes:
+      - trigger-s2-config:/config
+
+  trigger-s2:
+    image: ghcr.io/s2-streamstore/s2:latest@sha256:d6ded5ca7dd619fa7c946f06e39a98f9c95c6883c8bb884e5eaa129f232c920c
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      trigger-s2-init:
+        condition: service_completed_successfully
+    command:
+      [
+        "lite",
+        "--init-file",
+        "/config/s2-spec.json",
+        "--local-root",
+        "/data",
+        "--port",
+        "9330",
+      ]
+    ports:
+      - 127.0.0.1:9330:9330
+    user: "0:0"
+    volumes:
+      - trigger-s2-config:/config
+      - trigger-s2:/data
+
+volumes:
+  redis-data:
+  sandbox-identity:
+  trigger-shared:
+  trigger-postgres:
+  trigger-redis:
+  trigger-clickhouse:
+  trigger-s2:
+  trigger-s2-config:

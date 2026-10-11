@@ -41,6 +41,7 @@ import {
   redirectToBillingPortal as openBillingPortal,
   resumeSubscription,
 } from "@/lib/billing/client";
+import { isPolarBilling } from "@/lib/billing/provider";
 import type {
   BillingPortalFlow,
   DowngradeSubscriptionResult,
@@ -255,7 +256,12 @@ const AccountTab = () => {
     return status;
   };
 
+  // Polar's portal owns cancellation and undoing it.
   const handleCancelSubscription = () => {
+    if (isPolarBilling()) {
+      void redirectToBillingPortal();
+      return;
+    }
     setShowCancelDialog(true);
   };
 
@@ -310,6 +316,10 @@ const AccountTab = () => {
 
   const handleKeepPlan = async () => {
     if (isKeepingPlan) return;
+    if (isPolarBilling()) {
+      void redirectToBillingPortal();
+      return;
+    }
 
     const wasPause = Boolean(scheduledPause);
     const wasPlanChange = Boolean(pendingPlanChange);
@@ -376,14 +386,14 @@ const AccountTab = () => {
           <div>
             <div className="font-medium">
               {subscription === "ultra"
-                ? "HackerAI Ultra"
+                ? "DiggerAI Ultra"
                 : subscription === "team"
-                  ? "HackerAI Team"
+                  ? "DiggerAI Team"
                   : subscription === "pro-plus"
-                    ? "HackerAI Pro+"
+                    ? "DiggerAI Pro+"
                     : subscription === "pro"
-                      ? "HackerAI Pro"
-                      : "Get HackerAI Pro"}
+                      ? "DiggerAI Pro"
+                      : "Get DiggerAI Pro"}
             </div>
             {renewalPrice && (
               <div className="mt-0.5 text-sm text-muted-foreground">

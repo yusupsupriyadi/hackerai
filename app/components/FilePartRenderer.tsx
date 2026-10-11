@@ -12,11 +12,18 @@ import { useAction } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "@/convex/_generated/api";
 import { ImageViewer } from "./ImageViewer";
-import { AlertCircle, File, Download, Loader2 } from "lucide-react";
-import { FilePart, FilePartRendererProps } from "@/types/file";
+import { FileContentViewer } from "./FileContentViewer";
+import { AlertCircle, Eye, File, Download, Loader2 } from "lucide-react";
+import {
+  FilePart,
+  FilePartRendererProps,
+  LocalDesktopFile,
+} from "@/types/file";
+import { canPreviewFile } from "@/lib/utils/file-utils";
 import { toast } from "sonner";
 import { useFileUrlCacheContext } from "../contexts/FileUrlCacheContext";
-import { isTauriEnvironment, openDownloadsFolder } from "../hooks/useTauri";
+import { useOpenFilePreview } from "../contexts/FilePreviewContext";
+import { downloadFileFromUrl } from "./file-download";
 
 const FilePartRendererComponent = ({
   part,
@@ -36,6 +43,48 @@ const FilePartRendererComponent = ({
     alt: string;
   } | null>(null);
   const [downloadingFile, setDownloadingFile] = useState(false);
+  const openFilePreview = useOpenFilePreview();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  // Metadata-only descriptor: the viewer decides previewability from the name
+  // and media type, then fetches the content itself when opened.
+  const previewFile = useMemo<LocalDesktopFile>(
+    () => ({
+      name: part.name || part.filename || "Document",
+      type: part.mediaType ?? "",
+      size: part.size ?? part.sizeBytes ?? 0,
+      lastModified: 0,
+    }),
+    [part.name, part.filename, part.mediaType, part.size, part.sizeBytes],
+  );
+  const isPreviewable =
+    part.storage !== "local-desktop" &&
+    !part.mediaType?.startsWith("image/") &&
+    canPreviewFile(previewFile);
+
+  // In the chat timeline the preview opens in the side panel; elsewhere (share
+  // dialog, Computer sidebar) there is no panel slot, so it opens as a modal.
+  const handleOpenPreview = useCallback(() => {
+    if (!openFilePreview) {
+      setPreviewOpen(true);
+      return;
+    }
+    openFilePreview({
+      kind: "file-preview",
+      name: previewFile.name,
+      mediaType: part.mediaType,
+      fileId: part.fileId,
+      url: part.fileId ? undefined : part.url,
+      sizeBytes: part.sizeBytes ?? part.size,
+    });
+  }, [
+    openFilePreview,
+    previewFile.name,
+    part.mediaType,
+    part.fileId,
+    part.url,
+    part.sizeBytes,
+    part.size,
+  ]);
   // Initialize fileUrl from cache or part.url to prevent flash on remount
   const [fileUrl, setFileUrl] = useState<string | null>(() => {
     // First check cache for S3 files
@@ -137,34 +186,9 @@ const FilePartRendererComponent = ({
   }, [part.url, part.fileId, part.mediaType, getFileUrlAction]);
 
   const handleDownload = useCallback(async (url: string, fileName: string) => {
+    setDownloadingFile(true);
     try {
-      setDownloadingFile(true);
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      URL.revokeObjectURL(blobUrl);
-
-      if (isTauriEnvironment()) {
-        toast.success(`Downloaded ${fileName}`, {
-          description: "Saved to Downloads folder",
-          action: {
-            label: "Show in folder",
-            onClick: () => openDownloadsFolder(),
-          },
-        });
-      }
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Failed to download file");
-      window.open(url, "_blank", "noopener,noreferrer");
+      await downloadFileFromUrl(url, fileName);
     } finally {
       setDownloadingFile(false);
     }
@@ -262,8 +286,12 @@ const FilePartRendererComponent = ({
             </div>
           </div>
           {(url || fileId) && (
-            <div className="flex items-center justify-center w-6 h-6 rounded-md border border-border opacity-0 group-hover:opacity-100 transition-opacity">
-              <Download className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center justify-center w-6 h-6 rounded-md border border-border opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
+              {isPreviewable ? (
+                <Eye className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <Download className="w-4 h-4 text-muted-foreground" />
+              )}
             </div>
           )}
         </div>
@@ -273,11 +301,15 @@ const FilePartRendererComponent = ({
         return (
           <button
             key={partId}
-            onClick={() => handleNonImageFileClick(fileName)}
+            onClick={() =>
+              isPreviewable
+                ? handleOpenPreview()
+                : handleNonImageFileClick(fileName)
+            }
             disabled={downloadingFile}
             className="group p-2 w-full max-w-80 min-w-64 border rounded-lg bg-background hover:bg-secondary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
-            aria-label={`Download ${fileName}`}
+            aria-label={`${isPreviewable ? "Open" : "Download"} ${fileName}`}
           >
             {content}
           </button>
@@ -295,7 +327,12 @@ const FilePartRendererComponent = ({
     };
     PreviewCard.displayName = "FilePreviewCard";
     return PreviewCard;
-  }, [handleNonImageFileClick, downloadingFile]);
+  }, [
+    handleNonImageFileClick,
+    handleOpenPreview,
+    downloadingFile,
+    isPreviewable,
+  ]);
 
   // Memoize ConvexFilePart to prevent unnecessary re-renders
   const ConvexFilePart = memo(
@@ -488,6 +525,19 @@ const FilePartRendererComponent = ({
             imageSrc={selectedImage.src}
             imageAlt={selectedImage.alt}
             fileName={part.name || part.filename || selectedImage.alt}
+          />,
+          document.body,
+        )}
+      {previewOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <FileContentViewer
+            isOpen={previewOpen}
+            onClose={() => setPreviewOpen(false)}
+            file={previewFile}
+            fileName={previewFile.name}
+            fileId={part.fileId}
+            url={part.fileId ? undefined : part.url}
           />,
           document.body,
         )}

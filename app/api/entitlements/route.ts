@@ -9,6 +9,8 @@ import {
   resolveSubscriptionTier,
 } from "@/lib/auth/entitlements";
 import { workos } from "@/app/api/workos";
+import { syncPolarEntitlements } from "@/lib/billing/polar";
+import { isPolarBilling } from "@/lib/billing/provider";
 
 export async function GET(req: NextRequest) {
   try {
@@ -54,6 +56,14 @@ export async function GET(req: NextRequest) {
           { status: 409 },
         );
       }
+    }
+
+    // Polar billing: pull the current plan into WorkOS before refreshing, so
+    // the new token reflects a checkout even when no webhook reached us.
+    if (authResult.authenticated && isPolarBilling()) {
+      await syncPolarEntitlements(authResult.user.id).catch((error) => {
+        console.error("Polar entitlement sync failed:", error);
+      });
     }
 
     // A session-selected organization is authoritative. The single-membership

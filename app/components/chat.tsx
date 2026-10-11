@@ -34,6 +34,7 @@ import { useGlobalState } from "../contexts/GlobalState";
 import { resolveFreeDesktopSandboxPreference } from "@/lib/activation/free-desktop-sandbox";
 import { useComposerInput } from "../contexts/ComposerState";
 import { useChatRoutePresentation } from "../contexts/ChatRoutePresentationContext";
+import { FilePreviewProvider } from "../contexts/FilePreviewContext";
 import {
   type ActiveAgentToolApprovalRequest,
   useAgentApproval,
@@ -94,7 +95,7 @@ import {
   getAgentToolApprovalPromptTitle,
   isAgentToolApprovalOperation,
 } from "@/types/agent";
-import { coerceSelectedModel } from "@/types/chat";
+import { coerceSelectedModel, isSidebarFilePreview } from "@/types/chat";
 import { v4 as uuidv4 } from "uuid";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useComputerSidebarOverlay } from "@/hooks/use-workspace-layout";
@@ -580,6 +581,8 @@ const ChatContent = ({ autoResume }: { autoResume: boolean }) => {
     chatMode,
     setChatMode,
     sidebarOpen,
+    sidebarContent,
+    openSidebar,
     closeSidebar,
     chatSidebarOpen,
     initializeChat,
@@ -2448,47 +2451,49 @@ const ChatContent = ({ autoResume }: { autoResume: boolean }) => {
                       <SlowLoadingNotice key={chatId} label="Loading task…" />
                     </div>
                   ) : (
-                    <Messages
-                      key={chatId}
-                      chatId={chatId}
-                      scrollRef={scrollRef}
-                      contentRef={contentRef}
-                      messages={messages}
-                      acquisitionSurvey={
-                        acquisitionSurveyEligible && lastMessage
-                          ? {
-                              messageId: lastMessage.id,
-                              mode: surveyActivation!.mode,
-                            }
-                          : undefined
-                      }
-                      setMessages={setMessages}
-                      onRegenerate={handleRegenerate}
-                      onRetry={handleRetry}
-                      onContinue={handleContinue}
-                      onReconnect={resumeStream}
-                      onEditMessage={handleEditMessage}
-                      onBranchMessage={handleBranchMessage}
-                      status={status}
-                      error={error || null}
-                      paginationStatus={paginatedMessages.status}
-                      loadMore={paginatedMessages.loadMore}
-                      isMobile={isMobile}
-                      tempChatFileDetails={tempChatFileDetails}
-                      finishReason={chatDataForCurrentChat?.finish_reason}
-                      agentRunSpendCapWarning={agentRunSpendCapWarning}
-                      uploadStatus={uploadStatus}
-                      summarizationStatus={summarizationStatus}
-                      mode={
-                        chatMode ??
-                        (chatDataForCurrentChat as any)?.default_model_slug
-                      }
-                      chatTitle={chatTitle}
-                      branchedFromChatId={branchedFromChatId}
-                      branchedFromChatTitle={branchedFromChatTitle}
-                      anchorMessageId={timelineAnchorMessageId}
-                      contentInsetEndAdjustment={composerOverlayHeight}
-                    />
+                    <FilePreviewProvider onOpen={openSidebar}>
+                      <Messages
+                        key={chatId}
+                        chatId={chatId}
+                        scrollRef={scrollRef}
+                        contentRef={contentRef}
+                        messages={messages}
+                        acquisitionSurvey={
+                          acquisitionSurveyEligible && lastMessage
+                            ? {
+                                messageId: lastMessage.id,
+                                mode: surveyActivation!.mode,
+                              }
+                            : undefined
+                        }
+                        setMessages={setMessages}
+                        onRegenerate={handleRegenerate}
+                        onRetry={handleRetry}
+                        onContinue={handleContinue}
+                        onReconnect={resumeStream}
+                        onEditMessage={handleEditMessage}
+                        onBranchMessage={handleBranchMessage}
+                        status={status}
+                        error={error || null}
+                        paginationStatus={paginatedMessages.status}
+                        loadMore={paginatedMessages.loadMore}
+                        isMobile={isMobile}
+                        tempChatFileDetails={tempChatFileDetails}
+                        finishReason={chatDataForCurrentChat?.finish_reason}
+                        agentRunSpendCapWarning={agentRunSpendCapWarning}
+                        uploadStatus={uploadStatus}
+                        summarizationStatus={summarizationStatus}
+                        mode={
+                          chatMode ??
+                          (chatDataForCurrentChat as any)?.default_model_slug
+                        }
+                        chatTitle={chatTitle}
+                        branchedFromChatId={branchedFromChatId}
+                        branchedFromChatTitle={branchedFromChatTitle}
+                        anchorMessageId={timelineAnchorMessageId}
+                        contentInsetEndAdjustment={composerOverlayHeight}
+                      />
+                    </FilePreviewProvider>
                   )}
                 </div>
               ) : (
@@ -2595,7 +2600,11 @@ const ChatContent = ({ autoResume }: { autoResume: boolean }) => {
             className="fixed inset-0 z-50 flex items-center justify-center bg-background p-4"
             role="dialog"
             aria-modal="true"
-            aria-label="HackerAI’s Computer"
+            aria-label={
+              sidebarContent && isSidebarFilePreview(sidebarContent)
+                ? `Preview of ${sidebarContent.name}`
+                : "DiggerAI’s Computer"
+            }
             tabIndex={-1}
             data-layout="overlay"
             data-testid="computer-sidebar-container"

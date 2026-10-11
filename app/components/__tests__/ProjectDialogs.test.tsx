@@ -83,7 +83,7 @@ describe("project management dialogs", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Open HackerAI Desktop to change or remove this folder.",
+        "Open DiggerAI Desktop to change or remove this folder.",
       ),
     ).toBeInTheDocument();
     expect(

@@ -36,6 +36,7 @@ import {
   isSidebarNotes,
   isSidebarSharedFiles,
   isSidebarSubagents,
+  isSidebarFilePreview,
   type SidebarContent,
   type SidebarSubagentOrigin,
   type ChatStatus,
@@ -44,6 +45,7 @@ import {
 import type { Id } from "@/convex/_generated/dataModel";
 import type { FilePart } from "@/types/file";
 import { FilePartRenderer } from "./FilePartRenderer";
+import { FilePreviewSidebar } from "./FilePreviewSidebar";
 import { ImageViewer } from "./ImageViewer";
 import { TodoPanel } from "./TodoPanel";
 import { useFileUrlCacheContext } from "../contexts/FileUrlCacheContext";
@@ -530,8 +532,8 @@ export const ComputerSidebarBase: React.FC<ComputerSidebarProps> = ({
   const toolName = getToolName(displayContent);
   const displayTarget = getDisplayTarget(displayContent);
   const headerTitle = isProxy
-    ? "HackerAI\u2019s Proxy"
-    : "HackerAI\u2019s Computer";
+    ? "DiggerAI\u2019s Proxy"
+    : "DiggerAI\u2019s Computer";
 
   const handleClose = () => {
     setIsExpanded(false);
@@ -666,7 +668,7 @@ export const ComputerSidebarBase: React.FC<ComputerSidebarProps> = ({
               </div>
               <div className="flex-1 flex flex-col gap-1 min-w-0">
                 <div className="text-[12px] text-muted-foreground">
-                  HackerAI is using{" "}
+                  DiggerAI is using{" "}
                   <span className="text-foreground">{toolName}</span>
                 </div>
                 <div
@@ -1343,6 +1345,16 @@ export const ComputerSidebar: React.FC<{
     return (
       <SubagentsSidebar
         key={sidebarContent.toolCallId}
+        content={sidebarContent}
+        closeSidebar={closeSidebar}
+      />
+    );
+  }
+
+  if (sidebarOpen && sidebarContent && isSidebarFilePreview(sidebarContent)) {
+    return (
+      <FilePreviewSidebar
+        key={sidebarContent.fileId ?? sidebarContent.url ?? sidebarContent.name}
         content={sidebarContent}
         closeSidebar={closeSidebar}
       />

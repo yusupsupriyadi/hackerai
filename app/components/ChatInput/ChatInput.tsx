@@ -890,7 +890,7 @@ const ChatInputContent = ({
             onSelect={setSandboxPreference}
             reconnectInstructions={
               isDesktopPreference(sandboxPreference) && !selectedNativeDesktop
-                ? "Open HackerAI Desktop on your selected computer and sign in with the same account. Keep the app open while it reconnects."
+                ? "Open DiggerAI Desktop on your selected computer and sign in with the same account. Keep the app open while it reconnects."
                 : undefined
             }
             reconnecting={

@@ -224,35 +224,23 @@ export function BillingRecoveryPanel({
         </div>
       )}
       <div className="mt-4 flex flex-wrap gap-2">
-        {review ? (
-          <Button asChild size="sm">
-            <a href="mailto:contact@hackerai.co?subject=Subscription%20billing%20help">
-              Get billing help
-            </a>
+        {!review && recovery && status.renewalInvoicePayable && (
+          <Button
+            size="sm"
+            disabled={!!opening || checking}
+            onClick={() => void open("invoice")}
+          >
+            {opening === "invoice" ? (
+              <>
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                Opening…
+              </>
+            ) : authentication ? (
+              "Complete payment"
+            ) : (
+              "Pay invoice"
+            )}
           </Button>
-        ) : (
-          recovery &&
-          status.renewalInvoicePayable && (
-            <Button
-              size="sm"
-              disabled={!!opening || checking}
-              onClick={() => void open("invoice")}
-            >
-              {opening === "invoice" ? (
-                <>
-                  <Loader2
-                    aria-hidden="true"
-                    className="h-4 w-4 animate-spin"
-                  />
-                  Opening…
-                </>
-              ) : authentication ? (
-                "Complete payment"
-              ) : (
-                "Pay invoice"
-              )}
-            </Button>
-          )
         )}
         <Button
           size="sm"

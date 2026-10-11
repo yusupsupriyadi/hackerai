@@ -3,6 +3,20 @@
 Date: 2026-10-11
 Status: approved design, pending implementation plan
 
+**Update (2026-10-11):** at the user's request, file storage moved from the
+bundled MinIO container to Cloudflare R2. HackerAI uploads and Trigger.dev
+payloads now live in R2 buckets in the user's own Cloudflare account.
+
+**Update (2026-10-11):** at the user's request, sign-in moved from the WorkOS
+mock to WorkOS cloud (a non-production environment), and the database from the
+self-hosted Convex backend to Convex cloud on the free plan. The mock, the
+`WORKOS_API_HOSTNAME` client option, and the Convex HTTP-origin opt-in are
+removed. Once JWKS (WorkOS) and storage (R2) were public, nothing kept Convex
+local; Convex cloud only loses Redis cancellation pub/sub, which falls back to
+polling. Without billing, `NEXT_PUBLIC_SELF_HOSTED_ENTITLEMENTS=ultra-plan`
+keeps the top tier. Sections below that describe the mock or the local Convex
+backend are historical.
+
 ## Goal
 
 Run HackerAI for one person on one Windows 11 PC with Docker Desktop, without
@@ -24,7 +38,12 @@ isolated sandbox, file uploads, and web search/open-URL tools.
   auth rewrite or Keycloak/Authentik, because 62 files use
   `@workos-inc/authkit-nextjs` and tiers come from the JWT `entitlements`
   claim).
-- Web tools: self-hosted Firecrawl with SearXNG for search.
+- Web tools: Firecrawl. The user supplied a Firecrawl cloud key, which removes
+  about seven heavy containers and keeps the recency filter working (the
+  self-hosted Firecrawl + SearXNG path drops `tbs`). `FIRECRAWL_API_URL` still
+  points the adapter at a self-hosted instance if the user moves later.
+- Convex stays self-hosted even though a cloud project exists: Convex cloud
+  cannot reach the local WorkOS-compatible JWKS.
 - Every published port binds to `127.0.0.1`. On this machine
   `host.docker.internal` resolves to the LAN address, so it must not be used for
   browser-facing URLs: that would expose a command-executing tool to the LAN.
@@ -39,25 +58,35 @@ Host processes (Windows):
 
 `docker/selfhost/compose.yml`:
 
-| Service | Purpose | Local port |
-| --- | --- | --- |
-| `workos-mock` (new) | Login page, code/refresh exchange, JWKS, user data | 8787 |
-| `convex-backend`, `convex-dashboard` | Database and backend | 3210, 3211, 6791 |
-| `minio` + bucket init job | File storage (S3 API) | 9000, 9001 |
-| `redis` | Stream resumption (`REDIS_URL`) | 6379 |
-| `centrifugo` | Sandbox relay (existing `docker/centrifugo/config.json`) | 8000 |
-| Trigger.dev `webapp`, `postgres`, `redis`, `electric`, `clickhouse` | Agent runtime | 8030 |
-| `sandbox` | Kali image from `docker/Dockerfile` running `packages/local` | none |
-| Firecrawl `api`, `worker`, `playwright`, `redis`, plus `searxng` | Web search and scraping | 3002 |
+| Service                                                             | Purpose                                                      | Local port       |
+| ------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------- |
+| `workos-mock` (new)                                                 | Login page, code/refresh exchange, JWKS, user data           | 8787             |
+| `convex-backend`, `convex-dashboard`                                | Database and backend                                         | 3210, 3211, 6791 |
+| `redis`                                                             | Stream resumption (`REDIS_URL`)                              | 6379             |
+| `centrifugo`                                                        | Sandbox relay (existing `docker/centrifugo/config.json`)     | 8000             |
+| Trigger.dev `webapp`, `postgres`, `redis`, `electric`, `clickhouse` | Agent runtime                                                | 8030             |
+| `sandbox`                                                           | Kali image from `docker/Dockerfile` running `packages/local` | none             |
 
 Addressing rules:
 
 - Browser and host processes use `localhost:<port>`.
 - Containers reach each other by compose service name (`convex-backend`,
-  `minio`, `workos-mock`, `centrifugo`).
-- S3 presigned URLs are signed with the public endpoint
-  `http://localhost:9000` (signing needs no network), while Convex server-side
-  S3 operations use `http://minio:9000`.
+  `workos-mock`, `centrifugo`, `redis`).
+- File storage: HackerAI file uploads and Trigger.dev packets are stored in
+  Cloudflare R2 (`hackerai-files` and `packets` buckets). The browser, host
+  processes, Convex, and the sandbox container all use the same presigned URLs
+  on `https://<account id>.r2.cloudflarestorage.com`, so the single-hostname
+  constraint MinIO needed is gone. The bucket CORS rule allows the browser
+  origin `http://localhost:3000`.
+- Trigger.dev's S2 stream endpoint: the webapp hands `REALTIME_STREAMS_S2_ENDPOINT`
+  to the `trigger dev` worker on the host, which writes Agent output there. It is
+  `http://trigger-s2:9330/v1`, resolved on the host by a hosts-file entry,
+  `127.0.0.1 trigger-s2`.
+- Images and Agent-mode PDFs are sent to the model as base64 data URLs when
+  `INLINE_FILE_URLS_FOR_MODELS=true` (the setup default). It was added because
+  providers could not reach MinIO. R2 URLs are reachable from the internet, so
+  `false` (the hosted behavior) now works too; inlining also suits gateways
+  that do not fetch URLs.
 - `CENTRIFUGO_WS_URL` differs per env store: Convex env (returned to the
   sandbox container by `convex/localSandbox.ts`) uses
   `ws://centrifugo:8000/connection/websocket`; `.env.local` (Next.js and the
@@ -104,14 +133,15 @@ by reading `@workos-inc/node` 10.14.0 sources.
 
 ### Application changes (all opt-in)
 
-| File | Change |
-| --- | --- |
-| `app/api/workos.ts` | Pass `apiHostname`/`https`/`port` from `WORKOS_API_*` when set |
-| `convex/auth.config.ts` | Accept an `http://` origin with port only when `WORKOS_AUTH_ALLOW_INSECURE_ORIGIN=true`; update its tests |
-| `convex/s3Utils.ts` | Optional `AWS_S3_ENDPOINT` (server operations) and `AWS_S3_PUBLIC_ENDPOINT` (presigning, defaults to `AWS_S3_ENDPOINT`); path-style addressing when an endpoint is set |
-| `lib/chat/trigger-browser-realtime.ts` | `NEXT_PUBLIC_TRIGGER_API_URL`, defaulting to `https://api.trigger.dev` |
-| `lib/ai/tools/web-search.ts`, `open-url.ts`, `index.ts` | Firecrawl provider when `FIRECRAWL_API_URL` is set and the Perplexity/Jina key is not; search via `/v2/search`, open URL via `/v2/scrape`; existing providers unchanged when their keys are set |
-| `app/components/SecurityTab.tsx` | Hide the WorkOS `UserSecurity` widget when `NEXT_PUBLIC_SELF_HOSTED=true` (it calls `api.workos.com` from the browser) |
+| File                                    | Change                                                                                                                                                                                                                                       |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/api/workos.ts`                     | Pass `apiHostname`/`https`/`port` from `WORKOS_API_*` when set                                                                                                                                                                               |
+| `convex/auth.config.ts`                 | Accept an `http://` origin with port only when `WORKOS_AUTH_ALLOW_INSECURE_ORIGIN=true`; update its tests                                                                                                                                    |
+| `convex/s3Utils.ts`                     | Optional `AWS_S3_ENDPOINT` for S3-compatible storage (Cloudflare R2); path-style addressing when it is set                                                                                                                                   |
+| `lib/utils/file-transform-utils.ts`     | Inline image and PDF file parts as base64 data URLs when `INLINE_FILE_URLS_FOR_MODELS=true`                                                                                                                                                  |
+| `lib/chat/trigger-browser-realtime.ts`  | `NEXT_PUBLIC_TRIGGER_API_URL`, defaulting to `https://api.trigger.dev`                                                                                                                                                                       |
+| `lib/ai/tools/firecrawl.ts`, `index.ts` | Firecrawl provider when `FIRECRAWL_API_KEY` (cloud) or `FIRECRAWL_API_URL` (self-hosted) is set and the Perplexity/Jina key is not; search via `/v2/search`, open URL via `/v2/scrape`; existing providers unchanged when their keys are set |
+| `app/components/SecurityTab.tsx`        | Hide the WorkOS `UserSecurity` widget when `NEXT_PUBLIC_SELF_HOSTED=true` (it calls `api.workos.com` from the browser)                                                                                                                       |
 
 ### Sandbox
 
@@ -133,9 +163,16 @@ added, because in cloud mode it could route commands to an unintended machine.
 
 ## Setup flow
 
-1. Start Docker Desktop; `pnpm install`; `pnpm docker:build`.
-2. `pnpm selfhost:up` (healthchecks gate dependent services).
-3. `pnpm selfhost:setup`.
+1. Set up Cloudflare R2:
+   - Create buckets `hackerai-files` and `packets`.
+   - Add CORS rule to `hackerai-files` for origin `http://localhost:3000`.
+   - Create an R2 Account API token with Object Read & Write for both buckets.
+   - Copy credentials into `docker/selfhost/.env`.
+2. Start Docker Desktop; add `127.0.0.1 trigger-s2` to
+   `C:\Windows\System32\drivers\etc\hosts`; `pnpm install`;
+   `pnpm docker:build`.
+3. `pnpm selfhost:setup` (reads R2 env vars, populates `.env.local` and Convex
+   env, starts containers with healthchecks).
 4. Trigger.dev, the one manual step: open `localhost:8030`, sign in with the
    magic link from the webapp container log, create a project, copy the project
    ref and dev secret key into `.env.local`, log the CLI in to the local
@@ -168,15 +205,13 @@ added, because in cloud mode it could route commands to an unintended machine.
 
 ## Risks to resolve in the implementation plan
 
-- Whether the Agent route gates on Trigger health written by the
-  `/api/cron/trigger-health` cron, which does not run locally.
+- Resolved: Trigger health (`lib/health/trigger-health.ts`) is read only by the
+  `/api/health/*` uptime endpoints; Agent routes do not gate on it.
 - The Trigger.dev v4 self-hosted image tag compatible with SDK/CLI 4.6.3, the
   minimal service set for `trigger dev`, and how
   `scripts/trigger-dev-branch.mjs` targets a self-hosted API URL.
 - Convex self-hosted image tag, admin key generation, and the interaction
   between `CONVEX_SELF_HOSTED_*` and `CONVEX_DEPLOYMENT`.
-- Whether Firecrawl publishes prebuilt images or must be built from source, and
-  which recency filters survive with SearXNG.
 - How the sandbox preference is persisted in the UI.
 
 ## Out of scope

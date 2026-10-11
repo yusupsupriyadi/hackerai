@@ -534,7 +534,7 @@ describe("interact_terminal_session — PTY action dispatch", () => {
     })) as { result: { error?: string } };
 
     expect(result.result.error).toContain(
-      "changed while HackerAI was reviewing",
+      "changed while DiggerAI was reviewing",
     );
     expect(handle.sendInputCalls).toHaveLength(callsBeforeSend);
   });

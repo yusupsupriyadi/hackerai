@@ -110,8 +110,8 @@ describe("PricingDialog prices and billing status", () => {
       ),
     ).toBeVisible();
     expect(
-      screen.getByRole("link", { name: "Get billing help" }),
-    ).toBeVisible();
+      screen.queryByRole("link", { name: "Get billing help" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Get Pro+" })).toBeDisabled();
     expect(mockClearBillingReview).not.toHaveBeenCalled();
     expect(mockBilling.mutate).not.toHaveBeenCalled();
@@ -151,8 +151,8 @@ describe("PricingDialog prices and billing status", () => {
       screen.getByRole("region", { name: "Subscription payment recovery" }),
     ).toBeVisible();
     expect(
-      screen.getByRole("link", { name: "Get billing help" }),
-    ).toBeVisible();
+      screen.queryByRole("link", { name: "Get billing help" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Get Pro+" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Get Ultra" })).toBeDisabled();
     expect(

@@ -62,6 +62,40 @@ describe("s3Utils", () => {
       );
     });
 
+    it("does not set an endpoint when AWS_S3_ENDPOINT is unset", async () => {
+      delete process.env.AWS_S3_ENDPOINT;
+      const { S3Client } = await import("@aws-sdk/client-s3");
+      const { getS3Client } = await import("../s3Utils");
+
+      getS3Client();
+
+      const config = jest.mocked(S3Client).mock.calls[0][0] as Record<
+        string,
+        unknown
+      >;
+      expect(config).not.toHaveProperty("endpoint");
+      expect(config).not.toHaveProperty("forcePathStyle");
+    });
+
+    it("targets a custom S3-compatible endpoint with path-style addressing", async () => {
+      process.env.AWS_S3_ENDPOINT = "https://123abc.r2.cloudflarestorage.com";
+      try {
+        const { S3Client } = await import("@aws-sdk/client-s3");
+        const { getS3Client } = await import("../s3Utils");
+
+        getS3Client();
+
+        expect(S3Client).toHaveBeenCalledWith(
+          expect.objectContaining({
+            endpoint: "https://123abc.r2.cloudflarestorage.com",
+            forcePathStyle: true,
+          }),
+        );
+      } finally {
+        delete process.env.AWS_S3_ENDPOINT;
+      }
+    });
+
     it("should throw error if credentials are missing", async () => {
       delete process.env.AWS_S3_ACCESS_KEY_ID;
       delete process.env.AWS_S3_SECRET_ACCESS_KEY;

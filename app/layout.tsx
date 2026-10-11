@@ -22,6 +22,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import {
   ORGANIZATION_JSON_LD,
   SITE_DESCRIPTION,
+  SITE_LOGO_URL,
   SITE_NAME,
   SITE_URL,
   WEBSITE_JSON_LD,
@@ -45,8 +46,8 @@ const geistMono = Geist_Mono({
 });
 
 const APP_NAME = SITE_NAME;
-const APP_DEFAULT_TITLE = "HackerAI - AI-Powered Penetration Testing Assistant";
-const APP_TITLE_TEMPLATE = "%s | HackerAI";
+const APP_DEFAULT_TITLE = "DiggerAI - AI-Powered Penetration Testing Assistant";
+const APP_TITLE_TEMPLATE = "%s | DiggerAI";
 const APP_DESCRIPTION = SITE_DESCRIPTION;
 
 export const metadata: Metadata = {
@@ -58,6 +59,16 @@ export const metadata: Metadata = {
   },
   description: APP_DESCRIPTION,
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   keywords: [
     "hackerai",
     "pentestgpt",
@@ -87,10 +98,10 @@ export const metadata: Metadata = {
     description: APP_DESCRIPTION,
     images: [
       {
-        url: "https://hackerai.co/icon-512x512.png",
+        url: SITE_LOGO_URL,
         width: 512,
         height: 512,
-        alt: "HackerAI",
+        alt: "DiggerAI",
       },
     ],
   },
@@ -103,10 +114,10 @@ export const metadata: Metadata = {
     description: APP_DESCRIPTION,
     images: [
       {
-        url: "https://hackerai.co/icon-512x512.png",
+        url: SITE_LOGO_URL,
         width: 512,
         height: 512,
-        alt: "HackerAI",
+        alt: "DiggerAI",
       },
     ],
   },
@@ -191,7 +202,6 @@ export default async function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <JsonLd data={ORGANIZATION_JSON_LD} />
         <JsonLd data={WEBSITE_JSON_LD} />
       </head>

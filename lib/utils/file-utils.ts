@@ -121,12 +121,33 @@ const TEXT_VIEWABLE_EXTENSIONS = new Set([
   "gql",
 ]);
 
+/** Media types that say nothing about the content, e.g. agent-shared files. */
+const GENERIC_MEDIA_TYPES = new Set(["", "application/octet-stream"]);
+
 /**
- * Check if a file is a PDF by media type only.
- * Extension-only detection can route active content into the PDF iframe preview.
+ * Check if a file is a PDF. The `.pdf` extension counts only when the media
+ * type is generic, so a file that declares another type (e.g. text/html) is
+ * never routed to the PDF preview. The viewer still requires the %PDF-
+ * signature and renders through a blob typed application/pdf.
  */
 export function isPdfFile(file: File | LocalDesktopFile): boolean {
-  return file.type?.split(";")[0]?.trim().toLowerCase() === "application/pdf";
+  const mediaType = file.type?.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (mediaType === "application/pdf") return true;
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return GENERIC_MEDIA_TYPES.has(mediaType) && extension === "pdf";
+}
+
+const MARKDOWN_MEDIA_TYPES = new Set(["text/markdown", "text/x-markdown"]);
+const MARKDOWN_EXTENSIONS = new Set(["md", "markdown"]);
+
+/** Check if a file should be previewed as rendered Markdown. */
+export function isMarkdownFile(file: File | LocalDesktopFile): boolean {
+  const mediaType = file.type?.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (MARKDOWN_MEDIA_TYPES.has(mediaType)) return true;
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return MARKDOWN_EXTENSIONS.has(extension);
 }
 
 /**
@@ -141,6 +162,11 @@ export function isTextViewableFile(file: File | LocalDesktopFile): boolean {
 
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
   return TEXT_VIEWABLE_EXTENSIONS.has(extension);
+}
+
+/** True when the file viewer can show the file inline instead of only downloading it. */
+export function canPreviewFile(file: File | LocalDesktopFile): boolean {
+  return isPdfFile(file) || isTextViewableFile(file);
 }
 
 /**

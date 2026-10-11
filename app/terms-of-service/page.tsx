@@ -10,17 +10,17 @@ import {
 
 export const metadata: Metadata = {
   ...canonicalMetadata("/terms-of-service"),
-  title: "Terms of Service | HackerAI",
-  description: "Terms of Service and conditions for HackerAI services.",
+  title: "Terms of Service | DiggerAI",
+  description: "Terms of Service and conditions for DiggerAI services.",
   openGraph: {
-    title: "Terms of Service | HackerAI",
-    description: "Terms of Service and conditions for HackerAI services.",
+    title: "Terms of Service | DiggerAI",
+    description: "Terms of Service and conditions for DiggerAI services.",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Terms of Service | HackerAI",
-    description: "Terms of Service and conditions for HackerAI services.",
+    title: "Terms of Service | DiggerAI",
+    description: "Terms of Service and conditions for DiggerAI services.",
   },
 };
 
@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
     <div className="px-4 py-8 pb-16 md:px-0">
       <main className="container mx-auto max-w-2xl rounded-md border bg-card px-4 py-8 shadow-lg sm:px-8">
         <h1 className="text-center text-3xl font-semibold text-card-foreground">
-          HackerAI Terms of Service
+          DiggerAI Terms of Service
         </h1>
 
         <p className="mt-3 text-center text-sm text-muted-foreground">
@@ -47,7 +47,7 @@ export default function TermsOfServicePage() {
         <div className="mt-8 space-y-7 text-base leading-relaxed text-card-foreground sm:text-lg">
           <p>
             These Terms of Service (the &quot;Terms&quot;) are an agreement
-            between you and HackerAI LLC (&quot;HackerAI,&quot; &quot;we,&quot;
+            between you and DiggerAI (&quot;DiggerAI,&quot; &quot;we,&quot;
             &quot;us,&quot; or &quot;our&quot;) governing your use of our
             websites, applications, desktop and command-line software, agents,
             and related services (together, the &quot;Service&quot;). By
@@ -261,7 +261,7 @@ export default function TermsOfServicePage() {
             </h2>
             <p>
               The Service, including its software, models, prompts, design, and
-              trademarks, is owned by HackerAI or its licensors and protected by
+              trademarks, is owned by DiggerAI or its licensors and protected by
               intellectual property laws. Subject to these Terms, we grant you a
               limited, revocable, non-exclusive, non-transferable license to
               access and use the Service, and to install and use our desktop and
@@ -310,7 +310,7 @@ export default function TermsOfServicePage() {
               12. Limitation of liability
             </h2>
             <p>
-              To the maximum extent permitted by law, HackerAI and its
+              To the maximum extent permitted by law, DiggerAI and its
               affiliates, officers, directors, employees, agents, licensors, and
               providers will not be liable for any indirect, incidental,
               special, consequential, exemplary, or punitive damages, or for any
@@ -335,7 +335,7 @@ export default function TermsOfServicePage() {
             <h2 className="mb-2 text-xl font-semibold">13. Indemnity</h2>
             <p>
               To the maximum extent permitted by law, you will defend,
-              indemnify, and hold harmless HackerAI and its affiliates,
+              indemnify, and hold harmless DiggerAI and its affiliates,
               officers, directors, employees, agents, and licensors from and
               against any claims, liabilities, damages, losses, fines, and
               expenses, including reasonable legal fees, arising out of or
@@ -380,7 +380,7 @@ export default function TermsOfServicePage() {
             </h2>
             <p>
               These Terms are governed by the laws of the United States and of
-              the state in which HackerAI LLC is organized, without regard to
+              the state in which DiggerAI is organized, without regard to
               conflict-of-law rules, and any dispute will be brought exclusively
               in the state or federal courts located there, except that either
               party may seek injunctive relief in any court of competent

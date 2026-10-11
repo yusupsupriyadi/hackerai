@@ -79,7 +79,7 @@ must preserve its environment and configuration, not just its ports.
 
 Development auth, model APIs, and the Trigger control plane may remain external;
 this is not a fully offline stack. If Preview services are required, independently
-verify the designated HackerAI Developer Convex account/project/deployment and
+verify the designated DiggerAI Developer Convex account/project/deployment and
 matching Vercel and Trigger Preview targets before accessing them. Never use
 Production or another deployment as a fallback. An unexpectedly empty cloud
 target is a wrong-target alarm, not permission to seed it.
@@ -93,14 +93,14 @@ or a packaged app is needed, create a task-owned JSON override at
 
 ```json
 {
-  "productName": "HackerAI Local QA",
+  "productName": "DiggerAI Local QA",
   "identifier": "co.hackerai.desktop.localqa",
   "build": { "devUrl": "http://localhost:3000" },
   "app": {
     "windows": [
       {
         "label": "main",
-        "title": "HackerAI Local QA",
+        "title": "DiggerAI Local QA",
         "url": "http://localhost:3000",
         "width": 1280,
         "height": 800,

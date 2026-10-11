@@ -20,14 +20,45 @@ const TIER_ENTITLEMENTS: ReadonlyArray<{
   },
 ];
 
+const splitEntitlements = (value: string): string[] =>
+  value
+    .split(",")
+    .map((entitlement) => entitlement.trim())
+    .filter(Boolean);
+
+/**
+ * Entitlements a self-hosted install grants every signed-in user, because its
+ * WorkOS environment has no billing behind it. Ignored once a billing provider
+ * is configured. Never set in hosted deployments. Read per call: the browser
+ * bundle inlines the literal references.
+ */
+const selfHostedEntitlements = (): string[] =>
+  process.env.NEXT_PUBLIC_BILLING_PROVIDER
+    ? []
+    : splitEntitlements(process.env.NEXT_PUBLIC_SELF_HOSTED_ENTITLEMENTS ?? "");
+
+const withSelfHostedEntitlements = (
+  entitlements: readonly string[],
+): string[] => [
+  ...entitlements,
+  ...selfHostedEntitlements().filter(
+    (entitlement) => !entitlements.includes(entitlement),
+  ),
+];
+
 /**
  * Safely coerce a raw entitlements value (from a JWT or session) into a
- * typed string array.
+ * typed string array. WorkOS sends an array; Polar billing sends a
+ * comma-separated string through the WorkOS JWT template.
  */
 export function parseEntitlements(raw: unknown): string[] {
-  return Array.isArray(raw)
-    ? raw.filter((e: unknown): e is string => typeof e === "string")
-    : [];
+  return withSelfHostedEntitlements(
+    Array.isArray(raw)
+      ? raw.filter((e: unknown): e is string => typeof e === "string")
+      : typeof raw === "string"
+        ? splitEntitlements(raw)
+        : [],
+  );
 }
 
 /**
@@ -35,8 +66,9 @@ export function parseEntitlements(raw: unknown): string[] {
  * Returns `"free"` when no paid entitlement matches.
  */
 export function resolveSubscriptionTier(
-  entitlements: readonly string[],
+  tokenEntitlements: readonly string[],
 ): SubscriptionTier {
+  const entitlements = withSelfHostedEntitlements(tokenEntitlements);
   for (const { tier, slugs } of TIER_ENTITLEMENTS) {
     if (slugs.some((s) => entitlements.includes(s))) {
       return tier;

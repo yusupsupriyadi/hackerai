@@ -207,7 +207,7 @@ function renderSuccessPage(deepLinkUrl: string): string {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Redirecting to HackerAI...</title>
+  <title>Redirecting to DiggerAI...</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -237,9 +237,9 @@ function renderSuccessPage(deepLinkUrl: string): string {
 </head>
 <body>
   <div class="container">
-    <h1>Opening HackerAI Desktop...</h1>
+    <h1>Opening DiggerAI Desktop...</h1>
     <p>If the app doesn't open automatically, click the button below.</p>
-    <a href="${safeUrlForHtml}">Open HackerAI</a>
+    <a href="${safeUrlForHtml}">Open DiggerAI</a>
   </div>
   <script>
     window.location.href = ${safeUrlForJs};

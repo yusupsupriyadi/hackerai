@@ -53,7 +53,7 @@ export async function resolveProjectExecutionContext({
   ) {
     throw new ChatSDKError(
       "bad_request:api",
-      "This project is linked to a Desktop folder. Connect HackerAI Desktop and select Desktop before running Agent.",
+      "This project is linked to a Desktop folder. Connect DiggerAI Desktop and select Desktop before running Agent.",
     );
   }
 

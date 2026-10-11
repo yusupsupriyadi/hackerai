@@ -9,6 +9,10 @@ import {
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { ChatMode, SelectedModel } from "@/types/chat";
 import { openrouterAttributionHeaders } from "@/lib/ai/openrouter-attribution";
+import {
+  parseModelSlugOverrides,
+  withGatewayModelId,
+} from "@/lib/ai/openrouter-model-overrides";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -1197,12 +1201,24 @@ export const createOpenRouterPatchFetch =
 
 const openrouterPatchFetch = createOpenRouterPatchFetch();
 
+const openrouterBaseURL = process.env.OPENROUTER_BASE_URL?.trim();
+
 const openrouter = createOpenRouter({
   fetch: openrouterPatchFetch,
   headers: openrouterAttributionHeaders,
+  ...(openrouterBaseURL && { baseURL: openrouterBaseURL }),
 });
 
-type OpenRouterInstance = typeof openrouter;
+const toGatewayModelId = parseModelSlugOverrides(
+  process.env.OPENROUTER_MODEL_OVERRIDES,
+);
+
+const openrouterModel = (modelSlug: string) =>
+  toGatewayModelId
+    ? withGatewayModelId(openrouter(toGatewayModelId(modelSlug)), modelSlug)
+    : openrouter(modelSlug);
+
+type OpenRouterModelFactory = typeof openrouterModel;
 
 export const KIMI_K3_SLUG = "moonshotai/kimi-k3";
 export const GLM_5_2_SLUG = "z-ai/glm-5.2";
@@ -1237,7 +1253,7 @@ export const getOpenRouterProviderRoutingForModel = (
 };
 
 const buildProviderMap = (
-  or: OpenRouterInstance,
+  or: OpenRouterModelFactory,
   // Preserve the DeepSeek alias used by paid daily free allowance rescue.
   // Regular free Ask uses ask-model-free-glm with low reasoning per request.
   freeAskModelSlug = DEEPSEEK_V4_FLASH_VISION_SLUG,
@@ -1281,7 +1297,7 @@ const buildProviderMap = (
   }) as Record<string, any>;
 
 const baseProviders: ReturnType<typeof buildProviderMap> = {
-  ...buildProviderMap(openrouter),
+  ...buildProviderMap(openrouterModel),
   [ABLITERATION_MODEL_KEY]: abliteration(ABLITERATION_MODEL_ID),
   [ABLITERATION_LARGE_V2_MODEL_KEY]: abliteration(
     ABLITERATION_LARGE_V2_MODEL_ID,
@@ -1316,13 +1332,13 @@ export const modelDisplayNames: Record<ModelName, string> &
   Record<string, string> = {
   [ABLITERATION_MODEL_KEY]: "Abliteration abliterated-model",
   [ABLITERATION_LARGE_V2_MODEL_KEY]: "Abliteration abliterated-model-large-v2",
-  "ask-model": "Auto, an intelligent model router built by HackerAI",
-  "ask-model-free": "Auto, an intelligent model router built by HackerAI",
-  "ask-model-free-glm": "Auto, an intelligent model router built by HackerAI",
+  "ask-model": "Auto, an intelligent model router built by DiggerAI",
+  "ask-model-free": "Auto, an intelligent model router built by DiggerAI",
+  "ask-model-free-glm": "Auto, an intelligent model router built by DiggerAI",
   "ask-model-free-deepseek-v41":
-    "Auto, an intelligent model router built by HackerAI",
-  "agent-model": "Auto, an intelligent model router built by HackerAI",
-  "agent-model-free": "Auto, an intelligent model router built by HackerAI",
+    "Auto, an intelligent model router built by DiggerAI",
+  "agent-model": "Auto, an intelligent model router built by DiggerAI",
+  "agent-model-free": "Auto, an intelligent model router built by DiggerAI",
   "model-grok-4.6": "xAI Grok 4.6",
   "model-grok-4.5": "xAI Grok 4.5",
   "model-grok-4.5-pro": "xAI Grok 4.5",
@@ -1339,8 +1355,8 @@ export const modelDisplayNames: Record<ModelName, string> &
   "model-deepseek-v4-flash-vision": "DeepSeek V4.1 Flash",
   "model-deepseek-v4-flash-vision-pro": "DeepSeek V4.1 Flash",
   "model-kimi-k3": "Moonshot Kimi K3",
-  "fallback-agent-model": "Auto, an intelligent model router built by HackerAI",
-  "fallback-ask-model": "Auto, an intelligent model router built by HackerAI",
+  "fallback-agent-model": "Auto, an intelligent model router built by DiggerAI",
+  "fallback-ask-model": "Auto, an intelligent model router built by DiggerAI",
   "title-generator-model": "GLM 5.3 Flash",
   "auxiliary-vision-model": "Auxiliary vision model",
 };

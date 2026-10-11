@@ -42,7 +42,10 @@ type SendTriggerSessionInputOptions = {
   signal?: AbortSignal;
 };
 
-const TRIGGER_API_BASE_URL = "https://api.trigger.dev";
+// Self-hosted deployments point the browser at their own Trigger.dev webapp.
+const TRIGGER_API_BASE_URL = (
+  process.env.NEXT_PUBLIC_TRIGGER_API_URL?.trim() || "https://api.trigger.dev"
+).replace(/\/+$/, "");
 const TRIGGER_VERSION = "4.5.0";
 const TRIGGER_API_VERSION = "2025-07-16";
 const FETCH_TIMEOUT_MS = 30_000;

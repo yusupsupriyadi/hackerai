@@ -1,4 +1,7 @@
-import { extractSidebarContentFromMessage } from "../sidebar-utils";
+import {
+  extractSidebarContentFromMessage,
+  reconcileSidebarContentAfterRegeneration,
+} from "../sidebar-utils";
 
 describe("terminal sidebar output", () => {
   it("shows the generated command while automatic review is still pending", () => {
@@ -252,5 +255,18 @@ describe("web search sidebar output", () => {
       isSearching: true,
       toolCallId: "call-search",
     });
+  });
+});
+
+describe("reconcileSidebarContentAfterRegeneration", () => {
+  it("keeps an open file preview, which is not a tool execution", () => {
+    const preview = {
+      kind: "file-preview" as const,
+      name: "report.pdf",
+      mediaType: "application/pdf",
+      fileId: "file-1",
+    };
+
+    expect(reconcileSidebarContentAfterRegeneration([], preview)).toBe(preview);
   });
 });

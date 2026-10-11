@@ -107,8 +107,11 @@ describe("AccountTab while a retention pause is active", () => {
     });
     render(<AccountTab />);
     expect(
-      await screen.findByRole("link", { name: "Get billing help" }),
-    ).toBeVisible();
+      await screen.findByRole("button", { name: "Manage", exact: true }),
+    ).toBeEnabled();
+    expect(
+      screen.queryByRole("link", { name: "Get billing help" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Manage", exact: true }),
     ).toBeEnabled();

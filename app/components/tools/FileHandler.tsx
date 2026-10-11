@@ -34,9 +34,9 @@ interface FileHandlerProps {
 }
 
 const FILE_APPROVAL_TITLES: Partial<Record<FileInput["action"], string>> = {
-  write: "Allow HackerAI to create this file?",
-  append: "Allow HackerAI to append to this file?",
-  edit: "Allow HackerAI to edit this file?",
+  write: "Allow DiggerAI to create this file?",
+  append: "Allow DiggerAI to append to this file?",
+  edit: "Allow DiggerAI to edit this file?",
 };
 
 const FILE_APPROVAL_OPERATIONS = {
@@ -324,7 +324,7 @@ export const FileHandler = memo(function FileHandler({
       toolCallId={part.toolCallId}
       title={
         FILE_APPROVAL_TITLES[action ?? "write"] ??
-        "Allow HackerAI to change this file?"
+        "Allow DiggerAI to change this file?"
       }
       target={getFileToolDisplayTarget(target)}
       detail="Approve to continue, or deny to stop this file change."

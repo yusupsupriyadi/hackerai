@@ -42,6 +42,44 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
+describe("readTriggerRunStream API origin", () => {
+  const readFirstStreamUrl = async () => {
+    const fetchMock = jest
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(streamResponse("1", { value: "first" }));
+    global.fetch = fetchMock;
+    const { readTriggerRunStream: read } =
+      await import("@/lib/chat/trigger-browser-realtime");
+    const iterator = read<{ value: string }>("run_123", "ui", {
+      accessToken: "run-token",
+    })[Symbol.asyncIterator]();
+    await iterator.next();
+    await iterator.return?.();
+    return fetchMock.mock.calls[0]?.[0];
+  };
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_TRIGGER_API_URL;
+  });
+
+  it("defaults to Trigger.dev cloud", async () => {
+    let url: unknown;
+    await jest.isolateModulesAsync(async () => {
+      url = await readFirstStreamUrl();
+    });
+    expect(url).toBe("https://api.trigger.dev/realtime/v1/streams/run_123/ui");
+  });
+
+  it("uses a configured self-hosted Trigger.dev origin", async () => {
+    process.env.NEXT_PUBLIC_TRIGGER_API_URL = "http://localhost:8030/";
+    let url: unknown;
+    await jest.isolateModulesAsync(async () => {
+      url = await readFirstStreamUrl();
+    });
+    expect(url).toBe("http://localhost:8030/realtime/v1/streams/run_123/ui");
+  });
+});
+
 describe("readTriggerRunStream token refresh", () => {
   it("refreshes after 401 while preserving the stream cursor", async () => {
     jest.spyOn(Math, "random").mockReturnValue(0);

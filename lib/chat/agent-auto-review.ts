@@ -96,7 +96,7 @@ type AutoReviewModelRunner = (args: {
   abortSignal: AbortSignal;
 }) => Promise<{ output: unknown; costDollars?: number }>;
 
-const REVIEWER_SYSTEM_PROMPT = `You are HackerAI's separate action reviewer. Review exactly one action that has already reached an approval gate. You are not the acting Agent and cannot execute actions.
+const REVIEWER_SYSTEM_PROMPT = `You are DiggerAI's separate action reviewer. Review exactly one action that has already reached an approval gate. You are not the acting Agent and cannot execute actions.
 
 Return approve only when the exact action is clearly authorized and its risk is understood. Approval is one-time and cannot broaden permissions or create a reusable grant.
 

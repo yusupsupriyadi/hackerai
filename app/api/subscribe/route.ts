@@ -41,6 +41,8 @@ import {
   isCurrentProYearlyPrice,
 } from "@/lib/pricing/pro-yearly";
 import { hasActiveSuspensionForUser } from "@/lib/suspensions";
+import { createPolarCheckout } from "@/lib/billing/polar";
+import { isPolarBilling } from "@/lib/billing/provider";
 import { BILLING_ERRORS } from "@/lib/billing/billing-errors";
 import { hasRecentCanceledRenewalAtRisk } from "@/lib/billing/canceled-renewal-invoice";
 
@@ -290,6 +292,23 @@ export const POST = async (req: NextRequest) => {
 
     if (await hasActiveSuspensionForUser(userId)) {
       return json({ error: BILLING_ERRORS.accountSuspended }, { status: 403 });
+    }
+
+    if (isPolarBilling()) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+      if (!baseUrl) {
+        return json(
+          { error: "NEXT_PUBLIC_BASE_URL is not configured" },
+          { status: 500 },
+        );
+      }
+      const result = await createPolarCheckout(userId, requestedPlan, baseUrl);
+      return json(
+        result.status === 200
+          ? { ...result.body, checkoutAttemptId }
+          : result.body,
+        { status: result.status },
+      );
     }
 
     // Get user details from WorkOS to create a personal organization.

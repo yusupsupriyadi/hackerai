@@ -564,21 +564,7 @@ const MessageErrorContent = ({
           </Button>
         ) : (
           <>
-            {isSuspensionError ? (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() =>
-                  window.open(
-                    "https://help.hackerai.co/",
-                    "_blank",
-                    "noopener,noreferrer",
-                  )
-                }
-              >
-                Contact Support
-              </Button>
-            ) : (
+            {!isSuspensionError && (
               <>
                 {canReconnect && (
                   <Button variant="default" size="sm" onClick={onReconnect}>

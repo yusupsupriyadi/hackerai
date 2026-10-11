@@ -1,4 +1,5 @@
 import {
+  isSidebarFilePreview,
   SidebarContent,
   SidebarFile,
   SidebarNote,
@@ -872,6 +873,9 @@ export function reconcileSidebarContentAfterRegeneration(
   messages: Message[],
   sidebarContent: SidebarContent,
 ): SidebarContent | null {
+  // A file preview is not a tool execution, so regeneration leaves it open.
+  if (isSidebarFilePreview(sidebarContent)) return sidebarContent;
+
   const remainingContent = extractAllSidebarContent(messages);
   const selectionStillExists = remainingContent.some((content) =>
     isSameSidebarContent(content, sidebarContent),

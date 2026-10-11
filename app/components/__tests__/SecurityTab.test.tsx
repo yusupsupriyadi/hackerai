@@ -114,4 +114,17 @@ describe("SecurityTab", () => {
       screen.getByRole("button", { name: "Log out all" }),
     ).toBeInTheDocument();
   });
+  it("hides the WorkOS widget in self-hosted mode but keeps session actions", async () => {
+    process.env.NEXT_PUBLIC_SELF_HOSTED = "true";
+    try {
+      const { SecurityTab } = await import("../SecurityTab");
+      render(<SecurityTab />);
+
+      expect(screen.queryByTestId("workos-user-security")).toBeNull();
+      expect(screen.getByTestId("logout-button-device")).toBeInTheDocument();
+      expect(screen.getByTestId("logout-button-all")).toBeInTheDocument();
+    } finally {
+      delete process.env.NEXT_PUBLIC_SELF_HOSTED;
+    }
+  });
 });

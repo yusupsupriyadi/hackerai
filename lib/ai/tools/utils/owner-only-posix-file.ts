@@ -66,7 +66,7 @@ const runChecked = async (
     !sandbox.supportsCommandStdin()
   ) {
     throw new Error(
-      "Private terminal artifact storage requires an updated HackerAI local client",
+      "Private terminal artifact storage requires an updated DiggerAI local client",
     );
   }
   const result = await sandbox.commands.run(command, {

@@ -58,7 +58,7 @@ async function run(variant: (typeof variants)[number], size: number) {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
           "HTTP-Referer": "https://hackerai.co",
-          "X-Title": "HackerAI synthetic compaction benchmark",
+          "X-Title": "DiggerAI synthetic compaction benchmark",
         },
         body: JSON.stringify({
           model: variant.model,
@@ -68,7 +68,7 @@ async function run(variant: (typeof variants)[number], size: number) {
             {
               role: "system",
               content:
-                "You are HackerAI, a security assistant. Respect the user's scope and preserve ongoing work.",
+                "You are DiggerAI, a security assistant. Respect the user's scope and preserve ongoing work.",
             },
             { role: "user", content: fixture(size) },
             {

@@ -44,7 +44,7 @@ describe("agent tool schema descriptions", () => {
       "Prefer one static command per tool call",
     );
     expect(approvalGatedDescription).toContain(
-      "HackerAI displays it in the approval prompt",
+      "DiggerAI displays it in the approval prompt",
     );
     expect(approvalGatedDescription).toContain(
       "Prefer a stable safe prefix over copying the complete command",
@@ -62,7 +62,7 @@ describe("agent tool schema descriptions", () => {
     expect(getInputShape(approvalGatedTool)).toHaveProperty("prefix_rule");
     expect(getInputShape(approvalGatedTool).justification).toHaveProperty(
       "description",
-      "A concise, user-facing reason shown in HackerAI's approval prompt. Explain the intended outcome rather than repeating the command.",
+      "A concise, user-facing reason shown in DiggerAI's approval prompt. Explain the intended outcome rather than repeating the command.",
     );
     expect(getInputShape(approvalGatedTool).prefix_rule).toHaveProperty(
       "description",

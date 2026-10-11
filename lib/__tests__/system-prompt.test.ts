@@ -508,6 +508,17 @@ Commands run directly on the host OS "workstation" without Docker isolation. Be 
         "it does not by itself prove the exact source implementation, query construction, database ordering, or vulnerable line",
       );
       expect(prompt).toContain("a bypass-issued token, not a forged token");
+      expect(prompt).toContain("<report_formatting>");
+      expect(prompt).toContain(
+        "format it as clean Markdown so it is easy to scan",
+      );
+      expect(prompt).toContain("findings-at-a-glance table");
+      expect(prompt).toContain(
+        "Summary, Affected asset, Evidence, Reproduction, Impact, Remediation, and Confidence",
+      );
+      expect(prompt).toContain(
+        "order the detailed findings from highest to lowest severity",
+      );
     }
   });
 
@@ -523,6 +534,7 @@ Commands run directly on the host OS "workstation" without Docker isolation. Be 
 
     expect(prompt).not.toContain("<finding_quality>");
     expect(prompt).not.toContain("Close each vulnerability candidate");
+    expect(prompt).not.toContain("<report_formatting>");
   });
 
   it("adds bounded reconnaissance and artifact hygiene in cloud and local agent modes", async () => {
@@ -775,7 +787,7 @@ Commands run directly on the host OS "workstation" without Docker isolation. Be 
       "Do not use host.docker.internal as a shortcut to the user's host from the cloud sandbox",
     );
     expect(prompt).toContain(
-      "use the HackerAI Desktop App, Remote Control, or a user-provided reachable tunnel URL",
+      "use the DiggerAI Desktop App, Remote Control, or a user-provided reachable tunnel URL",
     );
     expect(prompt).toContain(
       "Do not invent host aliases or imply the cloud sandbox can directly reach private/internal assets",
@@ -814,7 +826,7 @@ Commands run directly on the host OS "workstation" without Docker isolation. Be 
       "Never treat a successful low-level connection or implausible scan output as confirmation that a port is open",
     );
     expect(cloudPrompt).toContain(
-      "recommend selecting the HackerAI Desktop App or a Remote Control connection",
+      "recommend selecting the DiggerAI Desktop App or a Remote Control connection",
     );
     expect(cloudPrompt).toContain(
       "Narrow application-level checks remain appropriate when they verify expected protocol behavior",
@@ -905,20 +917,20 @@ Commands run directly on the host OS "workstation" without Docker isolation. Be 
         null,
         null,
       );
-      const setupUrl =
-        "https://help.hackerai.co/en/articles/12961920-connecting-a-hackerai-agent-to-your-local-machine";
+      const setupLine =
+        "Setup: open Settings → Remote Control in DiggerAI and copy the connect command.";
 
       expect(prompt).toContain("<local_machine_access>");
       expect(prompt).toContain(
-        "Switching to Agent Mode or upgrading does not automatically connect HackerAI to the user's computer.",
+        "Switching to Agent Mode or upgrading does not automatically connect DiggerAI to the user's computer.",
       );
       expect(prompt).toContain(
-        "connect it through the HackerAI Desktop App or Remote Control",
+        "connect it through the DiggerAI Desktop App or Remote Control",
       );
       expect(prompt).toContain(
         "Local Agent access is available on every plan, including Free.",
       );
-      expect(prompt.split(setupUrl)).toHaveLength(2);
+      expect(prompt.split(setupLine)).toHaveLength(2);
     },
   );
 

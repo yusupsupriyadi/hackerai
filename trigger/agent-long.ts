@@ -1884,7 +1884,7 @@ export const agentLongTask = task({
       ) {
         throw new ChatSDKError(
           "bad_request:api",
-          "This Agent approval request uses an unsupported protocol version. Refresh HackerAI and start a new Agent request.",
+          "This Agent approval request uses an unsupported protocol version. Refresh DiggerAI and start a new Agent request.",
         );
       }
       userStopSignal.signal.throwIfAborted();

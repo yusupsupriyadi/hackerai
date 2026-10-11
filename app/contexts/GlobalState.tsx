@@ -38,7 +38,10 @@ import {
   type DesktopBridgeStatus,
 } from "@/app/hooks/useSandboxPreference";
 import { isTauriEnvironment } from "@/app/hooks/useTauri";
-import { resolveSubscriptionTier } from "@/lib/auth/entitlements";
+import {
+  parseEntitlements,
+  resolveSubscriptionTier,
+} from "@/lib/auth/entitlements";
 import { clearSharedToken, setSharedToken } from "@/lib/auth/shared-token";
 import { chatSidebarStorage } from "@/lib/utils/sidebar-storage";
 import { useMutation, useQuery } from "convex/react";
@@ -308,8 +311,8 @@ const GlobalStateProviderInner: React.FC<GlobalStateProviderProps> = ({
   const [entitlementRefreshRetryNonce, setEntitlementRefreshRetryNonce] =
     useState(0);
   const subscriptionFromEntitlements = useMemo<SubscriptionTier | null>(() => {
-    if (!Array.isArray(entitlements)) return null;
-    return resolveSubscriptionTier(entitlements);
+    if (entitlements == null) return null;
+    return resolveSubscriptionTier(parseEntitlements(entitlements));
   }, [entitlements]);
   const refreshAuthTokenAfterEntitlementRefresh = useCallback(async () => {
     clearSharedToken();
@@ -1048,6 +1051,8 @@ const GlobalStateProviderInner: React.FC<GlobalStateProviderProps> = ({
         setIsCheckingProPlan(false);
         // Remove the refresh param to avoid repeated refreshes
         url.searchParams.delete("refresh");
+        // Polar appends a customer portal session token to its success URL.
+        url.searchParams.delete("customer_session_token");
         window.history.replaceState({}, "", url.toString());
       }
     };

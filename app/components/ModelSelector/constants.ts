@@ -14,19 +14,19 @@ export interface ModelOption {
 export const ASK_MODEL_OPTIONS: ModelOption[] = [
   {
     id: "hackerai-standard",
-    label: "HackerAI Standard",
+    label: "DiggerAI Standard",
     description: "Reliable performance for everyday tasks",
     poweredBy: "Z.ai GLM 5.3 Flash",
   },
   {
     id: "hackerai-pro",
-    label: "HackerAI Pro",
+    label: "DiggerAI Pro",
     description: "Superior performance for most assignments",
     poweredBy: "DeepSeek V4 Pro 0813",
   },
   {
     id: "hackerai-max",
-    label: "HackerAI Max",
+    label: "DiggerAI Max",
     description: "Maximum intelligence for complex work",
     poweredBy: "Z.ai GLM 5.3",
   },
@@ -35,21 +35,21 @@ export const ASK_MODEL_OPTIONS: ModelOption[] = [
 export const AGENT_MODEL_OPTIONS: ModelOption[] = [
   {
     id: "hackerai-standard",
-    label: "HackerAI Standard",
+    label: "DiggerAI Standard",
     description: "Reliable agent for everyday automation",
     poweredBy: "Z.ai GLM 5.3 Flash",
     thinking: true,
   },
   {
     id: "hackerai-pro",
-    label: "HackerAI Pro",
+    label: "DiggerAI Pro",
     description: "Superior performance for most assignments",
     poweredBy: "DeepSeek V4.1 Flash",
     thinking: true,
   },
   {
     id: "hackerai-max",
-    label: "HackerAI Max",
+    label: "DiggerAI Max",
     description: "Maximum intelligence for complex work",
     poweredBy: "Z.ai GLM 5.3",
     thinking: true,

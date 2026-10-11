@@ -142,7 +142,7 @@ export const CustomizeHackerAIDialog = ({
           <div className="space-y-5 pb-3">
             {/* Nickname */}
             <div className="flex flex-col gap-2 px-1">
-              <Label htmlFor="nickname">What should HackerAI call you?</Label>
+              <Label htmlFor="nickname">What should DiggerAI call you?</Label>
               <TextareaAutosize
                 id="nickname"
                 placeholder="Nickname"
@@ -178,7 +178,7 @@ export const CustomizeHackerAIDialog = ({
 
             {/* Traits */}
             <div className="flex flex-col gap-2 px-1">
-              <Label>What traits should HackerAI have?</Label>
+              <Label>What traits should DiggerAI have?</Label>
 
               <TextareaAutosize
                 placeholder="Describe or select traits"
@@ -213,7 +213,7 @@ export const CustomizeHackerAIDialog = ({
             {/* Additional Info */}
             <div className="flex flex-col gap-3 px-1">
               <Label htmlFor="additional-info">
-                Anything else HackerAI should know about you?
+                Anything else DiggerAI should know about you?
               </Label>
               <TextareaAutosize
                 id="additional-info"

@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import { PRICING } from "@/lib/pricing/config";
 
-export const SITE_NAME = "HackerAI";
+export const SITE_NAME = "DiggerAI";
 export const SITE_URL = "https://hackerai.co";
 export const SITE_DESCRIPTION =
-  "HackerAI is an AI agent for penetration testing that helps security practitioners investigate targets, use terminal and browser tools, analyze findings, and prepare reports.";
-export const SITE_LOGO_URL = `${SITE_URL}/icon-512x512.png`;
+  "DiggerAI is an AI agent for penetration testing that helps security practitioners investigate targets, use terminal and browser tools, analyze findings, and prepare reports.";
+// The logo is served by this deployment; SITE_URL still points at hackerai.co,
+// which hosts the upstream HackerAI logo.
+export const SITE_LOGO_URL = new URL(
+  "/icon-512x512.png",
+  process.env.NEXT_PUBLIC_BASE_URL || SITE_URL,
+).toString();
 export const SITE_SCREENSHOT_URL = `${SITE_URL}/images/hackerai-workspace.png`;
 export const GITHUB_URL = "https://github.com/hackerai-tech/hackerai";
 export const HELP_CENTER_URL = "https://help.hackerai.co/en/";
@@ -21,12 +26,12 @@ export const STATUS_PAGE_URL = "https://status.hackerai.co/";
 
 export const PUBLIC_PAGE_LAST_MODIFIED = {
   home: "2026-09-02",
-  product: "2026-09-02",
-  pricing: "2026-10-06",
-  download: "2026-09-02",
-  trust: "2026-09-02",
-  privacy: "2026-08-31",
-  terms: "2026-09-02",
+  product: "2026-10-12",
+  pricing: "2026-10-12",
+  download: "2026-10-12",
+  trust: "2026-10-12",
+  privacy: "2026-10-12",
+  terms: "2026-10-12",
 } as const;
 
 export function formatPublicPageDate(date: string): string {
@@ -51,7 +56,7 @@ export const ORGANIZATION_JSON_LD = {
   "@type": "Organization",
   "@id": `${SITE_URL}/#organization`,
   name: SITE_NAME,
-  legalName: "HackerAI LLC",
+  legalName: "DiggerAI",
   url: SITE_URL,
   logo: {
     "@type": "ImageObject",
@@ -59,7 +64,6 @@ export const ORGANIZATION_JSON_LD = {
     width: 512,
     height: 512,
   },
-  sameAs: [GITHUB_URL],
 } as const;
 
 export const WEBSITE_JSON_LD = {
@@ -76,10 +80,10 @@ export const WEBSITE_JSON_LD = {
 
 const PAID_PLAN_OFFERS = (
   [
-    ["pro", "HackerAI Pro"],
-    ["pro-plus", "HackerAI Pro+"],
-    ["ultra", "HackerAI Ultra"],
-    ["team", "HackerAI Team (per seat)"],
+    ["pro", "DiggerAI Pro"],
+    ["pro-plus", "DiggerAI Pro+"],
+    ["ultra", "DiggerAI Ultra"],
+    ["team", "DiggerAI Team (per seat)"],
   ] as const
 ).map(([key, name]) => ({
   "@type": "Offer",
@@ -113,7 +117,7 @@ export const SOFTWARE_APPLICATION_JSON_LD = {
   offers: [
     {
       "@type": "Offer",
-      name: "HackerAI Free",
+      name: "DiggerAI Free",
       price: "0",
       priceCurrency: "USD",
       url: `${SITE_URL}/pricing`,

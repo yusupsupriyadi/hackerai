@@ -236,7 +236,7 @@ describe("selectModel", () => {
     ).toBe("model-deepseek-v4-flash-vision-pro");
   });
 
-  it("routes HackerAI Pro through DeepSeek V4.1 Flash", () => {
+  it("routes DiggerAI Pro through DeepSeek V4.1 Flash", () => {
     expect(selectModel("agent", "pro", "hackerai-pro")).toBe(
       "model-deepseek-v4-flash-vision-pro",
     );
@@ -480,59 +480,59 @@ describe("selectModel", () => {
 
   // Paid tier overrides preserve each tier's provider and media behavior.
   describe("tier override for ask mode (paid users)", () => {
-    it("should map HackerAI Pro to DeepSeek V4 Pro 0813 for text-only ask mode", () => {
+    it("should map DiggerAI Pro to DeepSeek V4 Pro 0813 for text-only ask mode", () => {
       expect(selectModel("ask", "ultra", "hackerai-pro")).toBe(
         "model-deepseek-v4-pro-0813",
       );
     });
 
-    it("should map HackerAI Pro to DeepSeek V4 Pro 0813 for team users", () => {
+    it("should map DiggerAI Pro to DeepSeek V4 Pro 0813 for team users", () => {
       expect(selectModel("ask", "team", "hackerai-pro")).toBe(
         "model-deepseek-v4-pro-0813",
       );
     });
 
-    it("should route HackerAI Pro vision to Grok 4.5 high", () => {
+    it("should route DiggerAI Pro vision to Grok 4.5 high", () => {
       expect(selectModel("ask", "pro", "hackerai-pro", true, false)).toBe(
         "model-grok-4.5-pro",
       );
     });
 
-    it("should keep HackerAI Pro on DeepSeek V4 Pro 0813 when a PDF is attached", () => {
+    it("should keep DiggerAI Pro on DeepSeek V4 Pro 0813 when a PDF is attached", () => {
       expect(selectModel("ask", "pro", "hackerai-pro", false, true)).toBe(
         "model-deepseek-v4-pro-0813",
       );
     });
 
-    it("should map HackerAI Standard to GLM 5.3 Flash when no image/PDF", () => {
+    it("should map DiggerAI Standard to GLM 5.3 Flash when no image/PDF", () => {
       expect(selectModel("ask", "pro", "hackerai-standard")).toBe(
         "model-glm-5.3-flash",
       );
     });
 
-    it("should use native GLM Flash vision for HackerAI Standard", () => {
+    it("should use native GLM Flash vision for DiggerAI Standard", () => {
       expect(selectModel("ask", "pro", "hackerai-standard", true, false)).toBe(
         "model-glm-5.3-flash",
       );
     });
 
-    it("should keep HackerAI Standard on GLM 5.3 Flash when a PDF is attached", () => {
+    it("should keep DiggerAI Standard on GLM 5.3 Flash when a PDF is attached", () => {
       expect(selectModel("ask", "pro", "hackerai-standard", false, true)).toBe(
         "model-glm-5.3-flash",
       );
     });
 
-    it("should use GLM Flash for HackerAI Standard when image and PDF are both attached", () => {
+    it("should use GLM Flash for DiggerAI Standard when image and PDF are both attached", () => {
       expect(selectModel("ask", "pro", "hackerai-standard", true, true)).toBe(
         "model-glm-5.3-flash",
       );
     });
 
-    it("should map HackerAI Max to GLM 5.3 for Ultra", () => {
+    it("should map DiggerAI Max to GLM 5.3 for Ultra", () => {
       expect(selectModel("ask", "ultra", "hackerai-max")).toBe("model-glm-5.3");
     });
 
-    it("should downgrade HackerAI Max to Pro outside Ultra", () => {
+    it("should downgrade DiggerAI Max to Pro outside Ultra", () => {
       expect(selectModel("ask", "pro", "hackerai-max")).toBe(
         "model-deepseek-v4-pro-0813",
       );
@@ -544,7 +544,7 @@ describe("selectModel", () => {
       );
     });
 
-    it("should map HackerAI Max to GLM 5.3 for paid users with extra usage", () => {
+    it("should map DiggerAI Max to GLM 5.3 for paid users with extra usage", () => {
       expect(
         selectModel("ask", "pro", "hackerai-max", false, false, {
           extraUsageAvailable: true,
@@ -555,49 +555,49 @@ describe("selectModel", () => {
 
   // Agent Standard uses native GLM for text, parsed PDFs, and images.
   describe("tier override in agent mode", () => {
-    it("should map HackerAI Standard to GLM 5.3 Flash for text-only agent mode", () => {
+    it("should map DiggerAI Standard to GLM 5.3 Flash for text-only agent mode", () => {
       expect(selectModel("agent", "pro", "hackerai-standard")).toBe(
         "model-glm-5.3-flash-agent",
       );
     });
 
-    it("should use native GLM Flash vision for HackerAI Standard", () => {
+    it("should use native GLM Flash vision for DiggerAI Standard", () => {
       expect(
         selectModel("agent", "pro", "hackerai-standard", true, false),
       ).toBe("model-glm-5.3-flash-agent");
     });
 
-    it("should keep HackerAI Standard on GLM 5.3 Flash when a PDF is attached", () => {
+    it("should keep DiggerAI Standard on GLM 5.3 Flash when a PDF is attached", () => {
       expect(
         selectModel("agent", "pro", "hackerai-standard", false, true),
       ).toBe("model-glm-5.3-flash-agent");
     });
 
-    it("should map HackerAI Pro to DeepSeek V4.1 Flash in text-only agent mode", () => {
+    it("should map DiggerAI Pro to DeepSeek V4.1 Flash in text-only agent mode", () => {
       expect(selectModel("agent", "pro", "hackerai-pro")).toBe(
         "model-deepseek-v4-flash-vision-pro",
       );
     });
 
-    it("should route HackerAI Pro vision to DeepSeek V4.1 Flash in agent mode", () => {
+    it("should route DiggerAI Pro vision to DeepSeek V4.1 Flash in agent mode", () => {
       expect(selectModel("agent", "pro", "hackerai-pro", true, false)).toBe(
         "model-deepseek-v4-flash-vision-pro",
       );
     });
 
-    it("should keep HackerAI Pro on DeepSeek V4.1 Flash when a PDF is attached", () => {
+    it("should keep DiggerAI Pro on DeepSeek V4.1 Flash when a PDF is attached", () => {
       expect(selectModel("agent", "pro", "hackerai-pro", false, true)).toBe(
         "model-deepseek-v4-flash-vision-pro",
       );
     });
 
-    it("should map HackerAI Max to GLM 5.3 in agent mode for Ultra", () => {
+    it("should map DiggerAI Max to GLM 5.3 in agent mode for Ultra", () => {
       expect(selectModel("agent", "ultra", "hackerai-max")).toBe(
         "model-glm-5.3",
       );
     });
 
-    it("should downgrade HackerAI Max to Pro in agent mode outside Ultra", () => {
+    it("should downgrade DiggerAI Max to Pro in agent mode outside Ultra", () => {
       expect(selectModel("agent", "pro", "hackerai-max")).toBe(
         "model-deepseek-v4-flash-vision-pro",
       );
@@ -609,7 +609,7 @@ describe("selectModel", () => {
       );
     });
 
-    it("should map HackerAI Max to GLM 5.3 in agent mode for paid users with extra usage", () => {
+    it("should map DiggerAI Max to GLM 5.3 in agent mode for paid users with extra usage", () => {
       expect(
         selectModel("agent", "pro-plus", "hackerai-max", false, false, {
           extraUsageAvailable: true,

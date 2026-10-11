@@ -200,7 +200,7 @@ describe("pauseSubscriptionAction", () => {
         cancel_at_period_end: true,
         cancellation_details: {
           feedback: "unused",
-          comment: "Paused for 2 months via HackerAI retention offer",
+          comment: "Paused for 2 months via DiggerAI retention offer",
         },
         metadata: expect.objectContaining({
           checkoutAttemptId: "ca_1",

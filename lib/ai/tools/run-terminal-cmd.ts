@@ -609,7 +609,7 @@ export const createRunTerminalCmd = (context: ToolContext) => {
               output: "",
               exitCode: 1,
               error:
-                "Sandbox is unavailable after repeated health check failures. Do NOT retry any terminal or sandbox commands. Inform the user that the sandbox could not be reached and suggest they wait a moment and try again, or delete the sandbox in Settings > Data Controls. If the issue persists, contact HackerAI support.",
+                "Sandbox is unavailable after repeated health check failures. Do NOT retry any terminal or sandbox commands. Inform the user that the sandbox could not be reached and suggest they wait a moment and try again, or delete the sandbox in Settings > Data Controls. If the issue persists, contact DiggerAI support.",
             },
           };
         }
@@ -654,7 +654,7 @@ export const createRunTerminalCmd = (context: ToolContext) => {
                   output: "",
                   exitCode: 1,
                   error:
-                    "Sandbox is unavailable after repeated health check failures. Do NOT retry any terminal or sandbox commands. Inform the user that the sandbox could not be reached and suggest they wait a moment and try again, or delete the sandbox in Settings > Data Controls. If the issue persists, contact HackerAI support.",
+                    "Sandbox is unavailable after repeated health check failures. Do NOT retry any terminal or sandbox commands. Inform the user that the sandbox could not be reached and suggest they wait a moment and try again, or delete the sandbox in Settings > Data Controls. If the issue persists, contact DiggerAI support.",
                 },
               };
             }
@@ -720,7 +720,7 @@ export const createRunTerminalCmd = (context: ToolContext) => {
                       output: "",
                       exitCode: 1,
                       error: unavailable
-                        ? "Sandbox is unavailable after the initial health check and reconnect both failed. Do NOT retry terminal or sandbox commands in this run. Inform the user that the sandbox could not be reached and suggest they wait a moment and try again, or delete the sandbox in Settings > Data Controls. If the issue persists, contact HackerAI support."
+                        ? "Sandbox is unavailable after the initial health check and reconnect both failed. Do NOT retry terminal or sandbox commands in this run. Inform the user that the sandbox could not be reached and suggest they wait a moment and try again, or delete the sandbox in Settings > Data Controls. If the issue persists, contact DiggerAI support."
                         : "Sandbox reconnection failed. The sandbox environment is not responding.",
                     },
                   },

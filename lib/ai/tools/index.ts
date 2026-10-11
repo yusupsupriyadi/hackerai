@@ -10,6 +10,11 @@ import { createGetTerminalFiles } from "./get-terminal-files";
 import { createFile } from "./file";
 import { createWebSearch } from "./web-search";
 import { createOpenUrlTool } from "./open-url";
+import {
+  createFirecrawlOpenUrlTool,
+  createFirecrawlWebSearch,
+  getFirecrawlConfig,
+} from "./firecrawl";
 import { createTodoWrite } from "./todo-write";
 import {
   createCreateNote,
@@ -274,6 +279,22 @@ export const createTools = (
   };
 
   const buildTools = (): ToolSet => {
+    // Perplexity and Jina keep precedence; Firecrawl covers deployments that
+    // only configure it (cloud key or self-hosted URL).
+    const firecrawl = getFirecrawlConfig();
+    const networkTools = {
+      ...(process.env.PERPLEXITY_API_KEY
+        ? { web_search: createWebSearch(context) }
+        : firecrawl && {
+            web_search: createFirecrawlWebSearch(context, firecrawl),
+          }),
+      ...(process.env.JINA_API_KEY
+        ? { open_url: createOpenUrlTool(context) }
+        : firecrawl && {
+            open_url: createFirecrawlOpenUrlTool(context, firecrawl),
+          }),
+    };
+
     // Create all available tools. This is intentionally a factory rather than a
     // one-time object so model-specific tool schemas can be rebuilt for
     // provider fallback legs.
@@ -289,12 +310,7 @@ export const createTools = (
         update_note: createUpdateNote(context),
         delete_note: createDeleteNote(context),
       }),
-      ...(process.env.PERPLEXITY_API_KEY && {
-        web_search: createWebSearch(context),
-      }),
-      ...(process.env.JINA_API_KEY && {
-        open_url: createOpenUrlTool(context),
-      }),
+      ...networkTools,
       ...(runtimePolicy.additionalTools?.(context) ?? {}),
     };
 
@@ -314,12 +330,7 @@ export const createTools = (
             update_note: allTools.update_note,
             delete_note: allTools.delete_note,
           }),
-          ...(process.env.PERPLEXITY_API_KEY && {
-            web_search: createWebSearch(context),
-          }),
-          ...(process.env.JINA_API_KEY && {
-            open_url: createOpenUrlTool(context),
-          }),
+          ...networkTools,
         }
       : allTools;
   };

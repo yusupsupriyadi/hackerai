@@ -456,7 +456,7 @@ describe("resolveAgentModelForImageToolResults", () => {
     ).toBe("model-deepseek-v4-flash-vision");
   });
 
-  it("keeps the HackerAI Pro GLM 5.3 fallback active after image tool results", () => {
+  it("keeps the DiggerAI Pro GLM 5.3 fallback active after image tool results", () => {
     expect(
       resolveAgentModelForImageToolResults("model-glm-5.3", "agent", true),
     ).toBe("model-glm-5.3");

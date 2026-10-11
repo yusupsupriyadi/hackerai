@@ -86,21 +86,11 @@ export class ConvexErrorBoundary extends Component<Props, State> {
                 </h1>
                 <p className="text-muted-foreground mb-6">
                   {isSuspended
-                    ? errorData?.message ||
-                      "Your account has been suspended. Contact support if you believe this is a mistake."
+                    ? errorData?.message || "Your account has been suspended."
                     : "An unexpected error occurred. You can try again or start a new conversation."}
                 </p>
                 <div className="flex gap-3 justify-center">
-                  {isSuspended ? (
-                    <a
-                      href="https://help.hackerai.co/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
-                    >
-                      Contact Support
-                    </a>
-                  ) : (
+                  {!isSuspended && (
                     <>
                       <button
                         onClick={this.handleRetry}

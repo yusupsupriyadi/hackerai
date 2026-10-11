@@ -29,7 +29,7 @@
 
 Reviewed [t3code's sidebar at b438447f](https://github.com/pingdotgg/t3code/blob/b438447f67b6b61bbe6f564d8b78fd90702117c5/apps/web/src/components/Sidebar.tsx).
 Its memoized rows and off-screen `content-visibility` informed the sidebar
-changes. HackerAI already uses LegendList transcript virtualization, paginated
+changes. DiggerAI already uses LegendList transcript virtualization, paginated
 message loading, stable timeline rows, and isolated composer state; those systems
 were retained rather than replaced.
 

@@ -15,11 +15,25 @@ import {
   paidFunnelProperties,
 } from "@/lib/analytics/paid-funnel";
 import { assertUserCanStartBillingTransaction } from "@/lib/suspensions";
+import {
+  createPolarPortalUrl,
+  getPolarBillingUserId,
+} from "@/lib/billing/polar";
+import { isPolarBilling } from "@/lib/billing/provider";
 
 export default async function redirectToBillingPortal(
   flow?: BillingPortalFlow,
   options?: BillingPortalOptions,
 ) {
+  if (isPolarBilling()) {
+    const userId = await getPolarBillingUserId();
+    await assertUserCanStartBillingTransaction(userId);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!;
+    const returnUrl = getExtraUsageReturnUrl(baseUrl, options?.returnPath);
+    returnUrl.searchParams.set("refresh", "entitlements");
+    return createPolarPortalUrl(userId, returnUrl.toString());
+  }
+
   const startedAt = Date.now();
   const context = await getBillingActionContext().catch((error) => {
     if (isExpectedBillingContextError(error)) {

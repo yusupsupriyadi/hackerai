@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "HackerAI",
+        "title": "DiggerAI",
         "width": 1280,
         "height": 800,
         "minWidth": 900,
@@ -50,7 +50,7 @@
     "copyright": "Copyright 2024 HackerAI",
     "category": "DeveloperTool",
     "shortDescription": "AI-powered penetration testing assistant",
-    "longDescription": "HackerAI is an AI-powered penetration testing assistant that helps security professionals identify vulnerabilities.",
+    "longDescription": "DiggerAI is an AI-powered penetration testing assistant that helps security professionals identify vulnerabilities.",
     "macOS": {
       "entitlements": "entitlements.plist",
       "exceptionDomain": "",

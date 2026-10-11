@@ -395,6 +395,19 @@ export interface SidebarSubagentOrigin {
   returnContent: SidebarSubagents;
 }
 
+/** A file from a chat message opened for reading in the side panel. */
+export interface SidebarFilePreview {
+  kind: "file-preview";
+  name: string;
+  mediaType?: string;
+  fileId?: string;
+  /** Already-resolved URL, used only when there is no file id. */
+  url?: string;
+  sizeBytes?: number;
+  /** Not a tool execution; declared so shared `toolCallId` reads stay valid. */
+  toolCallId?: never;
+}
+
 type SidebarContentValue =
   | SidebarFile
   | SidebarTerminal
@@ -402,7 +415,8 @@ type SidebarContentValue =
   | SidebarWebSearch
   | SidebarNotes
   | SidebarSharedFiles
-  | SidebarSubagents;
+  | SidebarSubagents
+  | SidebarFilePreview;
 
 export type SidebarContent = SidebarContentValue & {
   origin?: SidebarSubagentOrigin;
@@ -412,6 +426,11 @@ export const isSidebarSubagents = (
   content: SidebarContent,
 ): content is SidebarSubagents =>
   "kind" in content && content.kind === "subagents";
+
+export const isSidebarFilePreview = (
+  content: SidebarContent,
+): content is SidebarFilePreview =>
+  "kind" in content && content.kind === "file-preview";
 
 export const isSidebarFile = (
   content: SidebarContent,

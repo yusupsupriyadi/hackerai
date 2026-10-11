@@ -52,24 +52,30 @@ const SecurityTab = () => {
     }
   };
 
+  // The WorkOS security widget talks to WorkOS cloud from the browser, which a
+  // self-hosted deployment does not use. Session actions below still work.
+  const isSelfHosted = process.env.NEXT_PUBLIC_SELF_HOSTED === "true";
+
   return (
     <div className="space-y-6">
-      <div data-testid="workos-user-security">
-        <WorkOsWidgets
-          className="hackerai-security-widget"
-          style={{ blockSize: "auto", minBlockSize: "auto" }}
-          theme={{
-            appearance: "inherit",
-            accentColor: "gray",
-            grayColor: "gray",
-            hasBackground: false,
-            panelBackground: "solid",
-            fontFamily: "var(--font-geist-sans)",
-          }}
-        >
-          <UserSecurity authToken={getWidgetAccessToken} />
-        </WorkOsWidgets>
-      </div>
+      {!isSelfHosted && (
+        <div data-testid="workos-user-security">
+          <WorkOsWidgets
+            className="hackerai-security-widget"
+            style={{ blockSize: "auto", minBlockSize: "auto" }}
+            theme={{
+              appearance: "inherit",
+              accentColor: "gray",
+              grayColor: "gray",
+              hasBackground: false,
+              panelBackground: "solid",
+              fontFamily: "var(--font-geist-sans)",
+            }}
+          >
+            <UserSecurity authToken={getWidgetAccessToken} />
+          </WorkOsWidgets>
+        </div>
+      )}
 
       <div
         data-testid="security-session-actions"

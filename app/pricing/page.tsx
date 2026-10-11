@@ -1,45 +1,49 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CreditCard, ExternalLink, ShieldCheck, Undo2 } from "lucide-react";
 
 import Header from "@/app/components/Header";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { Button } from "@/components/ui/button";
+import { CropMarks } from "@/components/public/retro/CropMarks";
+import { PixelField } from "@/components/public/retro/PixelField";
+import { RetroWindow } from "@/components/public/retro/RetroWindow";
+import { SpecList } from "@/components/public/retro/SpecList";
 import {
-  CANCELLATION_HELP_URL,
-  EXTRA_USAGE_HELP_URL,
-  HELP_CENTER_URL,
-  REFUND_HELP_URL,
+  display,
+  focusOnPaper,
+  giantLink,
+  shell,
+  windowLink,
+} from "@/components/public/retro/styles";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
   SOFTWARE_APPLICATION_JSON_LD,
   canonicalMetadata,
 } from "@/lib/seo/site";
+import { cn } from "@/lib/utils";
+
 import { PricingPlans } from "./PricingPlans";
 
 const description =
-  "Compare current HackerAI Free, Pro, Pro+, Ultra, and Team pricing for AI-assisted penetration testing, local Agent mode, files, and cloud agents.";
+  "Compare DiggerAI Free, Pro, Pro+, and Ultra pricing for AI-assisted penetration testing, local Agent mode, files, and cloud agents.";
 
 export const metadata: Metadata = {
   ...canonicalMetadata("/pricing"),
-  title: "Pricing | HackerAI",
+  title: "Pricing | DiggerAI",
   description,
   openGraph: {
-    title: "HackerAI Pricing",
+    title: "DiggerAI Pricing",
     description,
     type: "website",
     url: "/pricing",
   },
   twitter: {
     card: "summary",
-    title: "HackerAI Pricing",
+    title: "DiggerAI Pricing",
     description,
   },
 };
 
 export const dynamic = "force-static";
-
-const externalLinkClassName =
-  "inline-flex items-center gap-2 rounded-sm text-sm font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
 
 export default function PricingPage() {
   return (
@@ -47,102 +51,116 @@ export default function PricingPage() {
       <JsonLd data={SOFTWARE_APPLICATION_JSON_LD} />
       <Header currentPath="/pricing" />
       <main>
-        <section className="border-b border-border/80">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-18">
-            <div className="mx-auto max-w-3xl text-center">
-              <p className="text-sm font-medium text-muted-foreground">Plans</p>
-              <h1 className="mt-3 text-5xl font-medium leading-[1.05] tracking-tight sm:text-6xl">
-                Pricing
-              </h1>
-              <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-                Start free with Agent mode on your own machine. Upgrade when you
-                need the best models, higher limits, file uploads, a larger
-                context window, or cloud agents.
-              </p>
-            </div>
+        <section id="pricing-hero" className="relative overflow-hidden">
+          <PixelField
+            variant="fade-down"
+            seed={29}
+            className="absolute inset-x-0 top-0 h-28 sm:h-36"
+          />
+          <div className={cn(shell, "relative pt-36 pb-14 sm:pt-44 sm:pb-20")}>
+            <p className="font-mono text-xs text-muted-foreground">Pricing</p>
+            <h1
+              className={cn(
+                display,
+                "mt-5 max-w-6xl text-[clamp(3rem,9vw,8rem)] leading-[0.9]",
+              )}
+            >
+              Start Free. Dig Deeper When You Need To.
+            </h1>
+            <p className="mt-8 max-w-2xl text-lg leading-8 text-pretty text-muted-foreground">
+              Agent mode on your own machine is free. Upgrade for the strongest
+              models, higher limits, file uploads, a bigger context window, or
+              cloud agents.
+            </p>
           </div>
         </section>
 
-        <section>
-          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-            <PricingPlans />
+        <section
+          id="plans"
+          aria-labelledby="plans-heading"
+          className={cn(shell, "pb-20 sm:pb-28")}
+        >
+          <PricingPlans />
+        </section>
 
-            <div className="mt-8 grid gap-8 rounded-lg border border-border bg-card/30 p-6 sm:p-8 lg:grid-cols-3">
-              <div>
-                <ShieldCheck className="size-5" aria-hidden="true" />
-                <h2 className="mt-4 text-xl font-semibold">
-                  Local or cloud execution
-                </h2>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                  Local mode runs commands on your own machine. Cloud agents run
-                  in an isolated sandbox we host. Both are spelled out on the
-                  Security &amp; Trust page.
-                </p>
-                <Button asChild variant="outline" className="mt-5">
-                  <Link href="/trust">Read Security &amp; Trust</Link>
-                </Button>
-              </div>
-              <div>
-                <CreditCard className="size-5" aria-hidden="true" />
-                <h2 className="mt-4 text-xl font-semibold">Extra Usage</h2>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                  Pro, Pro+, and Ultra can keep working after included monthly
-                  usage runs out. Extra Usage draws from a prepaid balance, is
-                  charged separately from the subscription, and is off until you
-                  enable it in Settings.
-                </p>
-                <a
-                  href={EXTRA_USAGE_HELP_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`mt-5 ${externalLinkClassName}`}
-                >
-                  Extra Usage guide
-                  <ExternalLink className="size-4" aria-hidden="true" />
-                </a>
-              </div>
-              <div>
-                <Undo2 className="size-5" aria-hidden="true" />
-                <h2 className="mt-4 text-xl font-semibold">
-                  Cancellation and refunds
-                </h2>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                  Cancel from account settings to stop renewal. Paid access
-                  continues until the end of the current billing period. Refund
-                  eligibility depends on your location and timing.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
-                  <a
-                    href={CANCELLATION_HELP_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={externalLinkClassName}
-                  >
-                    Cancellation guide
-                    <ExternalLink className="size-4" aria-hidden="true" />
-                  </a>
-                  <a
-                    href={REFUND_HELP_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={externalLinkClassName}
-                  >
-                    Refund policy
-                    <ExternalLink className="size-4" aria-hidden="true" />
-                  </a>
-                </div>
-                <a
-                  href={HELP_CENTER_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                >
-                  All billing help
-                  <ExternalLink className="size-3.5" aria-hidden="true" />
-                </a>
-              </div>
+        <section
+          id="billing"
+          aria-labelledby="billing-heading"
+          className="border-t border-white/15"
+        >
+          <div
+            className={cn(
+              shell,
+              "grid gap-12 py-20 sm:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start lg:gap-20",
+            )}
+          >
+            <div className="relative pb-10">
+              <h2
+                id="billing-heading"
+                className={cn(
+                  display,
+                  "text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.92]",
+                )}
+              >
+                How Billing Works.
+              </h2>
+              <p className="mt-6 max-w-md text-lg leading-8 text-muted-foreground">
+                One checkout, one portal for every change to your plan.
+              </p>
+              <CropMarks />
+            </div>
+            <RetroWindow title="billing.txt" bodyClassName="p-5 sm:p-7">
+              <SpecList
+                tone="paper"
+                className="mt-0"
+                items={[
+                  [
+                    "Merchant",
+                    "Polar sells the paid plans. It runs checkout, tax, and receipts, and holds your payment details.",
+                  ],
+                  [
+                    "Manage",
+                    "Account settings → Payment → Manage opens Polar's customer portal to switch plans, update your card, see invoices, or cancel.",
+                  ],
+                  ["Free plan", "No payment method needed."],
+                  [
+                    "Execution",
+                    "Local mode runs commands on your own machine. Cloud agents run in an isolated E2B sandbox.",
+                  ],
+                ]}
+              />
+              <Link href="/trust" className={cn(windowLink, focusOnPaper)}>
+                Read Security &amp; Trust
+              </Link>
+            </RetroWindow>
+          </div>
+        </section>
+
+        <section
+          id="pricing-closing"
+          aria-labelledby="pricing-closing-heading"
+          className="border-t border-white/15"
+        >
+          <div className={cn(shell, "pt-20 pb-14 text-center sm:pt-28")}>
+            <h2
+              id="pricing-closing-heading"
+              className={cn(
+                display,
+                "text-[clamp(2.25rem,6vw,5rem)] leading-[0.92]",
+              )}
+            >
+              Not Sure Yet? Start on Free.
+            </h2>
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-pretty text-muted-foreground">
+              You can upgrade from inside the app once a task needs more.
+            </p>
+            <div className="mt-10">
+              <Link href="/signup" className={giantLink}>
+                Create free account
+              </Link>
             </div>
           </div>
+          <PixelField variant="fade-up" seed={61} className="h-24 sm:h-32" />
         </section>
       </main>
       <PublicSiteFooter />

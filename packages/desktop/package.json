@@ -2,7 +2,7 @@
   "name": "@hackerai/desktop",
   "version": "0.1.0",
   "private": true,
-  "description": "HackerAI Desktop Application",
+  "description": "DiggerAI Desktop Application",
   "scripts": {
     "dev": "tauri dev -c src-tauri/tauri.dev.conf.json",
     "dev:prod": "tauri dev",

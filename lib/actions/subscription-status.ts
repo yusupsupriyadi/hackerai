@@ -15,6 +15,11 @@ import { hasRecentCanceledRenewalAtRisk } from "@/lib/billing/canceled-renewal-i
 import { isPayableRenewalInvoice } from "@/lib/billing/renewal-invoice";
 import { planLookupKeyToTier } from "@/lib/analytics/paid-funnel";
 import {
+  getPolarBillingUserId,
+  getPolarSubscriptionStatus,
+} from "@/lib/billing/polar";
+import { isPolarBilling } from "@/lib/billing/provider";
+import {
   invoicePaymentIntentId,
   paymentFailureGroup,
   stripeObjectId,
@@ -37,6 +42,10 @@ function hasCurrentSubscriptionStatus<T extends { status: string }>(
 }
 
 export default async function getSubscriptionCancellationStatusAction(): Promise<SubscriptionCancellationStatus> {
+  if (isPolarBilling()) {
+    return getPolarSubscriptionStatus(await getPolarBillingUserId());
+  }
+
   const startedAt = Date.now();
   const context = await getBillingStatusContext().catch((error) => {
     if (isExpectedBillingContextError(error)) {

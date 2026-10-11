@@ -946,3 +946,92 @@ describe("processMessageFiles image size guards", () => {
     ]);
   });
 });
+
+describe("processMessageFiles inline provider media", () => {
+  const originalFetch = global.fetch;
+  const PDF_BYTES = new TextEncoder().encode("%PDF-1.4 test");
+
+  beforeEach(() => {
+    mockConvexQuery.mockResolvedValue([]);
+    mockConvexAction.mockResolvedValue([
+      fileUrlInfo("http://hackerai-minio:9000/bucket/doc.pdf?sig=1", {
+        sizeBytes: PDF_BYTES.byteLength,
+        mediaType: "application/pdf",
+        name: "doc.pdf",
+      }),
+    ]);
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => PDF_BYTES.buffer,
+    })) as any;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    delete process.env.INLINE_FILE_URLS_FOR_MODELS;
+  });
+
+  const processAgentPdf = () =>
+    processMessageFiles(
+      makeMessage({
+        type: "file",
+        fileId: "file_pdf",
+        mediaType: "application/pdf",
+        name: "doc.pdf",
+      }),
+      "agent",
+      "user123",
+      "/home/user/upload",
+      "pro",
+    );
+
+  it("keeps signed storage URLs for the provider by default", async () => {
+    const result = await processAgentPdf();
+
+    expect(result.messages[0].parts[1]).toMatchObject({
+      type: "file",
+      url: "http://hackerai-minio:9000/bucket/doc.pdf?sig=1",
+    });
+  });
+
+  it("inlines stored media for the provider while the sandbox still downloads the signed URL", async () => {
+    process.env.INLINE_FILE_URLS_FOR_MODELS = "true";
+
+    const result = await processAgentPdf();
+
+    const providerPart = result.messages[0].parts.find(
+      (part: { type: string }) => part.type === "file",
+    );
+    expect(providerPart).toMatchObject({
+      type: "file",
+      url: `data:application/pdf;base64,${Buffer.from(PDF_BYTES).toString("base64")}`,
+    });
+    expect(result.sandboxFiles[0]).toMatchObject({
+      kind: "url",
+      url: "http://hackerai-minio:9000/bucket/doc.pdf?sig=1",
+    });
+  });
+
+  it("never fetches client-supplied URLs that are not stored files", async () => {
+    process.env.INLINE_FILE_URLS_FOR_MODELS = "true";
+
+    const result = await processMessageFiles(
+      makeMessage({
+        type: "file",
+        mediaType: "application/pdf",
+        name: "inline.pdf",
+        url: "https://example.com/inline.pdf",
+      }),
+      "ask",
+      "user123",
+      undefined,
+      "pro",
+    );
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(result.messages[0].parts[1]).toMatchObject({
+      url: "https://example.com/inline.pdf",
+    });
+  });
+});

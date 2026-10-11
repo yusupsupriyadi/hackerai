@@ -31,7 +31,7 @@ describe("Header", () => {
       preferSignInForReturningUser: true,
     });
 
-    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    await user.click(screen.getByRole("button", { name: "Menu" }));
 
     const dialog = await screen.findByRole("dialog");
     const navigation = within(dialog).getByRole("navigation", {
@@ -52,7 +52,7 @@ describe("Header", () => {
 
     // The header stays in place; the same button now closes the menu.
     expect(screen.getByTestId("sign-in-button-mobile")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Close navigation" }));
+    await user.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -60,7 +60,7 @@ describe("Header", () => {
     const user = userEvent.setup();
     render(<Header currentPath="/download" />);
 
-    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    await user.click(screen.getByRole("button", { name: "Menu" }));
 
     const navigation = within(await screen.findByRole("dialog")).getByRole(
       "navigation",

@@ -41,7 +41,7 @@ describe("ConvexErrorBoundary", () => {
     });
   });
 
-  it("shows the security ban reason and support without retry actions", () => {
+  it("shows the security ban reason without retry actions", () => {
     const boundary = createBoundary();
     boundary.state = {
       hasError: true,
@@ -61,8 +61,8 @@ describe("ConvexErrorBoundary", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Contact Support" }),
-    ).toHaveAttribute("href", "https://help.hackerai.co/");
+      screen.queryByRole("link", { name: "Contact Support" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Try Again" }),
     ).not.toBeInTheDocument();

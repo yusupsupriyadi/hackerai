@@ -266,6 +266,22 @@ describe("OpenRouter metadata extraction", () => {
     );
   });
 
+  it("never sends a compatible gateway's key to OpenRouter", async () => {
+    const fetchMock = jest.fn();
+    process.env.OPENROUTER_BASE_URL = "https://gateway.example/v1";
+    try {
+      await expect(
+        fetchOpenRouterGenerationMetadata("gen-gateway", {
+          apiKey: "gateway-secret",
+          fetch: fetchMock as unknown as typeof globalThis.fetch,
+        }),
+      ).resolves.toEqual({});
+    } finally {
+      delete process.env.OPENROUTER_BASE_URL;
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("retries once when a generation record is not immediately available", async () => {
     const fetchMock = jest
       .fn()

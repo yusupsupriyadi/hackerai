@@ -1,10 +1,10 @@
 <p align="center">
   <a href="https://hackerai.co/">
-    <img src="public/icon-512x512.png" width="150" alt="HackerAI Logo">
+    <img src="public/icon-512x512.png" width="150" alt="DiggerAI Logo">
   </a>
 </p>
 
-<h1 align="center">HackerAI</h1>
+<h1 align="center">DiggerAI</h1>
 
 <h2 align="center">Your AI-Powered Penetration Testing Assistant</h2>
 
@@ -18,6 +18,10 @@
 ## Getting started
 
 Coding agents should start with [AGENTS.md](AGENTS.md).
+
+To run the app, Agent runtime, and sandbox on one machine with Docker, using
+free or personal accounts for sign-in, database, and storage, follow
+[docs/self-hosting.md](docs/self-hosting.md).
 
 ### Prerequisites
 
@@ -70,7 +74,7 @@ pnpm run setup
 To use abliteration.ai for eligible security requests, create an API key in the
 [abliteration.ai console](https://abliteration.ai/console) and set
 `ABLITERATION_API_KEY` in `.env.local`, Vercel, and Trigger.dev. Without this
-optional key, HackerAI continues using its standard models.
+optional key, DiggerAI continues using its standard models.
 
 ### Start the development server
 

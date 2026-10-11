@@ -1,6 +1,6 @@
 # E2E Testing Setup
 
-This directory contains end-to-end tests for HackerAI using Playwright.
+This directory contains end-to-end tests for DiggerAI using Playwright.
 
 ## Test Suites
 

@@ -110,13 +110,13 @@ export function FreeAskComputerActivation() {
           variant="ghost"
           size="sm"
           className="h-7 w-7 rounded-md bg-muted p-0 text-foreground shadow-none hover:bg-muted/50 md:w-auto md:px-2"
-          aria-label="Set up HackerAI Desktop for Agent mode"
-          title="Set up HackerAI Desktop"
+          aria-label="Set up DiggerAI Desktop for Agent mode"
+          title="Set up DiggerAI Desktop"
           data-testid="free-ask-computer-activation-trigger"
         >
           <Monitor className="size-4" aria-hidden="true" />
           <span className="hidden md:inline" translate="no">
-            HackerAI Desktop
+            DiggerAI Desktop
           </span>
         </Button>
       </PopoverTrigger>
@@ -145,7 +145,7 @@ export function FreeAskComputerActivation() {
           {isMobilePlatform ? (
             <p className="text-xs text-muted-foreground">
               Use a desktop computer to download{" "}
-              <span translate="no">HackerAI Desktop</span> for macOS, Windows,
+              <span translate="no">DiggerAI Desktop</span> for macOS, Windows,
               or Linux.
             </p>
           ) : (
@@ -157,7 +157,7 @@ export function FreeAskComputerActivation() {
                 onClick={handleDesktopDownload}
                 data-testid="free-ask-computer-download"
               >
-                Download <span translate="no">HackerAI Desktop</span>
+                Download <span translate="no">DiggerAI Desktop</span>
               </a>
             </Button>
           )}

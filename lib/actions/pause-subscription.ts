@@ -171,7 +171,7 @@ export default async function pauseSubscriptionAction(
       cancel_at_period_end: true,
       cancellation_details: {
         feedback: stripeCancellationFeedback(cancellationReason.reasonCategory),
-        comment: `Paused for ${months} month${months === 1 ? "" : "s"} via HackerAI retention offer`,
+        comment: `Paused for ${months} month${months === 1 ? "" : "s"} via DiggerAI retention offer`,
       },
       metadata: {
         ...subscription.metadata,

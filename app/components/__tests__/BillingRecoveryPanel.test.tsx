@@ -74,11 +74,8 @@ describe("BillingRecoveryPanel", () => {
       checkoutRequiresReview: true,
     });
     expect(
-      screen.getByRole("link", { name: "Get billing help" }),
-    ).toHaveAttribute(
-      "href",
-      expect.stringContaining("mailto:contact@hackerai.co"),
-    );
+      screen.queryByRole("link", { name: "Get billing help" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Pay invoice" }),
     ).not.toBeInTheDocument();
@@ -107,8 +104,8 @@ describe("BillingRecoveryPanel", () => {
     ).toBeVisible();
     expect(screen.getByRole("button", { name: "Update card" })).toBeEnabled();
     expect(
-      screen.getByRole("link", { name: "Get billing help" }),
-    ).toBeVisible();
+      screen.queryByRole("link", { name: "Get billing help" }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/An unresolved payment/)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Pay invoice" }),

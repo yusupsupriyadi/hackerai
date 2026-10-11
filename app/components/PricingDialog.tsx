@@ -11,7 +11,12 @@ import { useGlobalState } from "../contexts/GlobalState";
 import { useUpgrade } from "../hooks/useUpgrade";
 import { useBillingRecoveryStatus } from "../hooks/useBillingRecoveryStatus";
 import { BillingRecoveryPanel } from "./BillingRecoveryPanel";
-import { getSubscriptionCancellationStatus } from "@/lib/billing/client";
+import {
+  getSubscriptionCancellationStatus,
+  redirectToBillingPortal,
+} from "@/lib/billing/client";
+import { isPolarBilling } from "@/lib/billing/provider";
+import { toast } from "sonner";
 import { navigateToAuth } from "../hooks/useTauri";
 import {
   freeFeatures,
@@ -342,6 +347,19 @@ const PricingDialog: React.FC<PricingDialogProps> = ({
       } catch (error) {
         console.error("Upgrade failed:", error);
       }
+    } else if (isPolarBilling()) {
+      // Polar's portal previews and confirms plan changes itself.
+      try {
+        window.location.assign(
+          await redirectToBillingPortal(undefined, {
+            surface: "pricing_dialog",
+          }),
+        );
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to open billing",
+        );
+      }
     } else {
       // For existing subscribers, show confirmation dialog with upgrade details
       setPendingUpgrade({ plan, planName, price });
@@ -644,7 +662,7 @@ const PricingDialog: React.FC<PricingDialogProps> = ({
                 <PlanCard
                   planName="Free"
                   price={0}
-                  description="Try HackerAI"
+                  description="Try DiggerAI"
                   features={freeFeatures}
                   buttonText={freeButtonConfig.text}
                   buttonVariant={freeButtonConfig.variant}
@@ -704,7 +722,7 @@ const PricingDialog: React.FC<PricingDialogProps> = ({
                 price={isYearly ? PRICING.ultra.yearly : PRICING.ultra.monthly}
                 description={
                   pricingIntentCopy?.ultraDescription ??
-                  "Get the most out of HackerAI"
+                  "Get the most out of DiggerAI"
                 }
                 features={ultraFeatures}
                 buttonText={ultraButtonConfig.text}
@@ -718,7 +736,7 @@ const PricingDialog: React.FC<PricingDialogProps> = ({
               />
             </div>
 
-            {!hasSubscription && (
+            {!hasSubscription && !isPolarBilling() && (
               <div className="mt-8 flex justify-center">
                 <Button
                   variant="secondary"

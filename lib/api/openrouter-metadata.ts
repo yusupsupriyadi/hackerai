@@ -329,7 +329,12 @@ export async function fetchOpenRouterGenerationMetadata(
   } = {},
 ): Promise<OpenRouterModelMetadata> {
   const apiKey = options.apiKey ?? process.env.OPENROUTER_API_KEY;
-  if (!apiKey || !generationId.startsWith("gen-")) {
+  // A compatible gateway's key must never be sent to OpenRouter itself.
+  if (
+    !apiKey ||
+    !generationId.startsWith("gen-") ||
+    process.env.OPENROUTER_BASE_URL?.trim()
+  ) {
     return {};
   }
 

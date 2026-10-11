@@ -88,10 +88,15 @@ export function getS3Client(
   const accessKeyId = getRequiredEnvVar("AWS_S3_ACCESS_KEY_ID");
   const secretAccessKey = getRequiredEnvVar("AWS_S3_SECRET_ACCESS_KEY");
   const region = location?.region ?? getLegacyS3StorageLocation().region;
+  // S3-compatible endpoints such as Cloudflare R2 use path-style addressing.
+  // Presigned URLs carry the endpoint host, so it must resolve for every
+  // consumer: browser, host processes, and containers.
+  const endpoint = process.env.AWS_S3_ENDPOINT?.trim();
 
   return new S3Client({
     region,
-    ...(options.forcePathStyle ? { forcePathStyle: true } : {}),
+    ...(endpoint ? { endpoint } : {}),
+    ...(options.forcePathStyle || endpoint ? { forcePathStyle: true } : {}),
     // Presigned browser uploads do not provide the body while signing. The
     // SDK's default WHEN_SUPPORTED behavior otherwise signs the CRC32 of an
     // empty body, which S3 rejects when the browser PUTs the real file.

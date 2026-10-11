@@ -2,16 +2,10 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { RetroWindow } from "@/components/public/retro/RetroWindow";
 import { useIsStandalone } from "@/hooks/use-is-standalone";
 import { downloadLinks } from "./constants";
-import {
-  AppleIcon,
-  WindowsIcon,
-  LinuxIcon,
-  AndroidIcon,
-  DeviceIcon,
-  DownloadIcon,
-} from "./icons";
+import { AppleIcon, AndroidIcon, DeviceIcon, DownloadIcon } from "./icons";
 
 type Platform = "macos" | "windows" | "linux" | "ios" | "android" | "unknown";
 type LinuxArch = "x64" | "arm64";
@@ -139,24 +133,16 @@ export function DownloadSection() {
   }
 
   return (
-    <div className="rounded-md border bg-card p-8 text-center shadow-lg">
-      <div className="mb-6">
-        <PlatformIcon platform={detected.platform} />
-      </div>
-
-      <Button asChild size="lg" className="mb-4 text-lg">
-        <a href={detected.downloadUrl}>
-          <DownloadIcon />
-          Download for {detected.displayName}
-        </a>
-      </Button>
-
-      {detected.platform === "unknown" && (
-        <p className="mt-4 text-sm text-muted-foreground">
-          Can&apos;t detect your OS? Choose from the options below.
-        </p>
-      )}
-    </div>
+    <RetroWindow title="desktop.txt" bodyClassName="p-6 sm:p-8">
+      <p className="text-xl leading-8 text-pretty">
+        DiggerAI desktop builds are not published yet.
+      </p>
+      <p className="mt-3 leading-7 text-pretty text-[#3d3d3d]">
+        Agent mode works in the browser today. To run commands on your own
+        machine, open Settings &rarr; Remote Control and copy the connect
+        command.
+      </p>
+    </RetroWindow>
   );
 }
 
@@ -213,10 +199,10 @@ function MobileInstallCard({ detected }: { detected: DetectedPlatform }) {
       <div className="rounded-md border bg-card p-8 text-center shadow-lg">
         <MobilePlatformIcon platform={detected.platform} />
         <h2 className="mt-4 text-2xl font-semibold text-card-foreground">
-          HackerAI is installed
+          DiggerAI is installed
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          You&apos;re already running HackerAI as an installed app.
+          You&apos;re already running DiggerAI as an installed app.
         </p>
       </div>
     );
@@ -230,13 +216,13 @@ function MobileInstallCard({ detected }: { detected: DetectedPlatform }) {
           Install Mobile App
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Install HackerAI on your {detected.displayName} device
+          Install DiggerAI on your {detected.displayName} device
         </p>
       </div>
 
       {installed && (
         <div className="mb-4 rounded-md border border-green-500/30 bg-green-500/10 p-4 text-center text-sm text-green-600 dark:text-green-400">
-          Installed! Open HackerAI from your home screen.
+          Installed! Open DiggerAI from your home screen.
         </div>
       )}
 
@@ -248,7 +234,7 @@ function MobileInstallCard({ detected }: { detected: DetectedPlatform }) {
             onClick={handleInstallClick}
           >
             <DownloadIcon />
-            Install HackerAI
+            Install DiggerAI
           </Button>
           <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-border" />
@@ -315,21 +301,6 @@ function StepsList({ steps }: { steps: React.ReactNode[] }) {
       ))}
     </ol>
   );
-}
-
-function PlatformIcon({ platform }: { platform: Platform }) {
-  const className = "mx-auto h-16 w-16 text-muted-foreground";
-
-  switch (platform) {
-    case "macos":
-      return <AppleIcon className={className} />;
-    case "windows":
-      return <WindowsIcon className={className} />;
-    case "linux":
-      return <LinuxIcon className={className} />;
-    default:
-      return <DeviceIcon className={className} />;
-  }
 }
 
 function MobilePlatformIcon({ platform }: { platform: Platform }) {

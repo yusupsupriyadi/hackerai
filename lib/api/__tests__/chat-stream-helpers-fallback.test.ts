@@ -415,7 +415,7 @@ describe("buildProviderOptions fallback chain", () => {
   });
 
   it.each(["ask", "agent"] as const)(
-    "falls back from HackerAI Pro Grok 4.6 to GLM 5.3 then Kimi K3 in %s mode",
+    "falls back from DiggerAI Pro Grok 4.6 to GLM 5.3 then Kimi K3 in %s mode",
     (mode) => {
       const opts = buildProviderOptions(
         mode === "agent",
@@ -936,7 +936,7 @@ describe("isAutoModelSelectionForRetry", () => {
     ).toBe(true);
   });
 
-  it("keeps explicitly selected HackerAI Max GLM 5.3 retryable", () => {
+  it("keeps explicitly selected DiggerAI Max GLM 5.3 retryable", () => {
     expect(
       isAutoModelSelectionForRetry({
         selectedModel: "model-glm-5.3",
@@ -1020,7 +1020,7 @@ describe("isExplicitDeepSeekProSelectionForRetry", () => {
   );
 
   it.each(["model-deepseek-v4-pro", "model-deepseek-v4-pro-0813"])(
-    "recognizes explicit HackerAI Pro on %s",
+    "recognizes explicit DiggerAI Pro on %s",
     (selectedModel) => {
       expect(
         isExplicitDeepSeekProSelectionForRetry({
@@ -1099,7 +1099,7 @@ describe("getRetryFallbackModel", () => {
     },
   );
 
-  it("retries HackerAI Pro Grok with GLM 5.3", () => {
+  it("retries DiggerAI Pro Grok with GLM 5.3", () => {
     expect(getRetryFallbackModel("model-grok-4.6-pro", "agent")).toBe(
       "model-glm-5.3",
     );
@@ -1357,7 +1357,7 @@ describe("resolveServedModelForCostAccounting", () => {
     ).toBe("model-kimi-k3");
   });
 
-  it("maps HackerAI Pro primary and fallback usage to their exact cost keys", () => {
+  it("maps DiggerAI Pro primary and fallback usage to their exact cost keys", () => {
     expect(
       resolveServedModelForCostAccounting({
         modelName: "model-grok-4.5-pro",

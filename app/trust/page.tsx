@@ -1,448 +1,105 @@
 import type { Metadata } from "next";
-import {
-  Activity,
-  BadgeCheck,
-  Bot,
-  Bug,
-  Code,
-  CreditCard,
-  Database,
-  ExternalLink as ExternalLinkIcon,
-  FileText,
-  Globe,
-  KeyRound,
-  Network,
-  ShieldCheck,
-  Terminal,
-  Trash2,
-} from "lucide-react";
+import type { ReactNode } from "react";
+import Link from "next/link";
+
 import Header from "@/app/components/Header";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
+import { geistPixel } from "@/components/public/retro/fonts";
+import { PixelField } from "@/components/public/retro/PixelField";
+import { RetroWindow } from "@/components/public/retro/RetroWindow";
+import { SpecList } from "@/components/public/retro/SpecList";
+import { display, focusOnDark, shell } from "@/components/public/retro/styles";
 import {
-  HELP_CENTER_URL as DEFAULT_HELP_CENTER_URL,
   PUBLIC_PAGE_LAST_MODIFIED,
-  STATUS_PAGE_URL,
   canonicalMetadata,
   formatPublicPageDate,
 } from "@/lib/seo/site";
+import { cn } from "@/lib/utils";
+
+const description =
+  "How DiggerAI handles your data: AI models, sandbox execution, storage, billing, and account security.";
 
 export const metadata: Metadata = {
   ...canonicalMetadata("/trust"),
-  title: "Security & Trust | HackerAI",
-  description:
-    "How HackerAI handles your data: AI providers, sandbox execution, storage, billing, account security, and subprocessors.",
+  title: "Security & Trust | DiggerAI",
+  description,
   openGraph: {
-    title: "Security & Trust | HackerAI",
-    description:
-      "How HackerAI handles your data: AI providers, sandbox execution, storage, billing, account security, and subprocessors.",
+    title: "Security & Trust | DiggerAI",
+    description,
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Security & Trust | HackerAI",
-    description:
-      "How HackerAI handles your data: AI providers, sandbox execution, storage, billing, account security, and subprocessors.",
+    title: "Security & Trust | DiggerAI",
+    description,
   },
 };
 
 export const dynamic = "force-static";
 
-const HELP_CENTER_URL =
-  process.env.NEXT_PUBLIC_HELP_CENTER_URL || DEFAULT_HELP_CENTER_URL;
+const sections = [
+  { id: "data", title: "Data We Process" },
+  { id: "models", title: "AI Models and the Web" },
+  { id: "execution", title: "Where Commands Run" },
+  { id: "storage", title: "Where Data Is Stored" },
+  { id: "account", title: "Account Security" },
+  { id: "billing", title: "Billing" },
+  { id: "deletion", title: "Deleting Your Data" },
+  { id: "disclosure", title: "Reporting a Vulnerability" },
+  { id: "compliance", title: "Compliance" },
+] as const;
 
-interface Subprocessor {
-  name: string;
-  purpose: string;
-  dataCategories: string;
-}
+type SectionId = (typeof sections)[number]["id"];
 
-const subprocessors: Subprocessor[] = [
-  {
-    name: "OpenRouter",
-    purpose: "Routes task requests to third-party AI model providers",
-    dataCategories: "Prompts, conversation context, file content, tool output",
-  },
-  {
-    name: "OpenAI",
-    purpose: "Content moderation",
-    dataCategories: "Message content",
-  },
-  {
-    name: "Perplexity",
-    purpose: "Web search performed by the agent",
-    dataCategories: "Search queries from agent runs",
-  },
-  {
-    name: "Jina AI",
-    purpose: "Webpage content retrieval for the agent",
-    dataCategories: "URLs and retrieved page content",
-  },
-  {
-    name: "E2B",
-    purpose: "Cloud sandboxes (US, or EU for connections from Europe)",
-    dataCategories: "Commands, command output, files inside the sandbox",
-  },
-  {
-    name: "Convex",
-    purpose: "Primary application database",
-    dataCategories: "Account data, tasks, messages, files, settings",
-  },
-  {
-    name: "Amazon Web Services (S3)",
-    purpose:
-      "File storage (US regions, or eu-central-1 for connections from Europe)",
-    dataCategories: "Uploaded files",
-  },
-  {
-    name: "Upstash / Redis",
-    purpose: "Rate limiting and response stream resumption",
-    dataCategories: "Transient identifiers and streaming state",
-  },
-  {
-    name: "WorkOS",
-    purpose: "Authentication and account management",
-    dataCategories: "Email, name, sessions, MFA enrollment",
-  },
-  {
-    name: "Stripe",
-    purpose: "Payments and subscription billing",
-    dataCategories: "Billing contact and payment details (held by Stripe)",
-  },
-  {
-    name: "PostHog",
-    purpose: "Product analytics and error tracking",
-    dataCategories: "Usage events and diagnostic data",
-  },
-  {
-    name: "Trigger.dev",
-    purpose:
-      "Background execution of long-running agent tasks (US regions, or eu-central-1 for connections from Europe)",
-    dataCategories: "Task payloads including conversation context",
-  },
-  {
-    name: "Vercel",
-    purpose: "Application hosting",
-    dataCategories: "Request data processed by the web application",
-  },
-];
-
-interface SectionProps {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  children: React.ReactNode;
-}
-
-const Section = ({ icon: Icon, title, children }: SectionProps) => (
-  <section className="rounded-xl border border-border bg-card p-6 sm:p-8">
-    <div className="mb-4 flex items-center gap-3">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
-        <Icon className="size-4.5 text-foreground" />
-      </div>
-      <h2 className="text-lg font-semibold text-card-foreground sm:text-xl">
-        {title}
-      </h2>
-    </div>
-    <div className="space-y-3 text-[15px] leading-relaxed text-muted-foreground">
-      {children}
-    </div>
-  </section>
+const inlineLink = cn(
+  "font-medium text-foreground underline underline-offset-4 hover:decoration-2",
+  focusOnDark,
 );
 
-const InlineLink = ({
-  href,
+function TrustSection({
+  id,
   children,
 }: {
-  href: string;
-  children: React.ReactNode;
-}) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80"
-  >
-    {children}
-  </a>
-);
-
-const CheckList = ({ items }: { items: React.ReactNode[] }) => (
-  <ul className="space-y-2.5">
-    {items.map((item, index) => (
-      <li key={index} className="flex items-start gap-2.5">
-        <ShieldCheck className="mt-1 size-4 shrink-0 text-foreground" />
-        <span>{item}</span>
-      </li>
-    ))}
-  </ul>
-);
-
-function TrustContent() {
+  id: SectionId;
+  children: ReactNode;
+}) {
+  const index = sections.findIndex((section) => section.id === id);
   return (
-    <main className="bg-background px-4 py-14 sm:px-6 sm:py-20">
-      <div className="mx-auto max-w-4xl">
-        {/* Hero */}
-        <header className="mb-12 text-center">
-          <div className="mx-auto mb-6 flex size-14 items-center justify-center rounded-2xl border border-border bg-card shadow-sm">
-            <ShieldCheck
-              className="size-7 text-foreground"
-              aria-hidden="true"
-            />
-          </div>
-          <h1 className="text-5xl font-medium leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-            Security &amp; Trust
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-            HackerAI is an AI agent for penetration testing and security work.
-            This page describes the data we process, where agent code runs, and
-            the services we rely on to operate.
-          </p>
-          <p className="mt-6 inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            Last updated{" "}
-            <time className="ml-1" dateTime={PUBLIC_PAGE_LAST_MODIFIED.trust}>
-              {formatPublicPageDate(PUBLIC_PAGE_LAST_MODIFIED.trust)}
-            </time>
-          </p>
-        </header>
-
-        <div className="space-y-6">
-          <Section icon={Database} title="Data we process">
-            <p>Depending on how you use HackerAI, the service processes:</p>
-            <CheckList
-              items={[
-                "Prompts and task messages you send to the agent",
-                "Files you upload (PDF, CSV, JSON, TXT, Markdown, DOC/DOCX, and PNG/JPEG/WebP/GIF images), including text extracted from them",
-                "URLs and search queries used when the agent browses or searches the web",
-                "Terminal commands and their output from agent sandbox sessions",
-                "Browser screenshots captured inside the agent sandbox",
-                "Notes and custom instructions you save",
-                "Account information such as your email address and name",
-                "Usage analytics and error diagnostics",
-              ]}
-            />
-          </Section>
-
-          <Section icon={Bot} title="AI model providers">
-            <p>
-              Task requests are routed through OpenRouter to the provider behind
-              the model you select, such as Anthropic, Google, DeepSeek,
-              Moonshot AI, or xAI. Your prompt, relevant conversation context,
-              and tool results are sent to that provider to generate a response.
-            </p>
-            <p>
-              When the agent searches the web or opens a URL, search queries are
-              processed by Perplexity and page content is retrieved through Jina
-              AI. Message content is screened by OpenAI for content moderation.
-            </p>
-            <p>
-              Each provider processes data under its own terms. Whether data is
-              used for model training varies by provider, so we don&apos;t make
-              a blanket guarantee on this point &mdash; refer to the policies of
-              the providers listed below.
-            </p>
-          </Section>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Section icon={Terminal} title="Execution environments">
-              <p>
-                By default, terminal and browser actions run in an isolated E2B
-                cloud sandbox. You can delete your sandboxes at any time from
-                Settings &rarr; Data controls.
-              </p>
-              <p>
-                A local execution mode is also available. It runs commands
-                directly on your machine with your user&apos;s privileges and{" "}
-                <strong className="text-foreground">no isolation</strong>, so we
-                recommend it only on machines dedicated to testing.
-              </p>
-            </Section>
-
-            <Section icon={KeyRound} title="Account security">
-              <CheckList
-                items={[
-                  "Authentication is handled by WorkOS AuthKit; we don't operate our own password database",
-                  <>
-                    Multi-factor authentication (TOTP) is available in Settings
-                    &rarr; Security
-                  </>,
-                  <>
-                    Sessions can be revoked per device or across all devices
-                    from Settings &rarr; Security
-                  </>,
-                ]}
-              />
-            </Section>
-          </div>
-
-          <Section icon={Globe} title="Where your data is processed">
-            <p>
-              Agent runs, new cloud sandboxes, and new file uploads are placed
-              by the location you connect from. Connections from Europe use our
-              EU region (Frankfurt, eu-central-1). Connections from North
-              America use the nearest US region. This is decided per request
-              from your IP address, not from an account setting, so a VPN or
-              travel changes it.
-            </p>
-            <p>
-              Sandboxes and files created before regional placement was
-              introduced stay where they were created until you delete them.
-            </p>
-            <p>
-              The primary database, AI model providers, web search, content
-              moderation, authentication, billing, and analytics are not
-              regional. See the{" "}
-              <InlineLink href="/privacy-policy">Privacy Policy</InlineLink> for
-              international processing.
-            </p>
-          </Section>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Section icon={CreditCard} title="Billing">
-              <p>
-                Payments are processed by Stripe; card details never reach our
-                servers. Subscriptions can be managed or canceled through the
-                billing portal in your account settings, and deleting your
-                account cancels any active subscription.
-              </p>
-            </Section>
-
-            <Section icon={Trash2} title="Data deletion">
-              <CheckList
-                items={[
-                  "Delete individual tasks, or all tasks at once",
-                  "Delete your terminal sandboxes",
-                  "Revoke links to tasks you have shared",
-                  "Delete your account, which removes database records, cancels your Stripe subscription, and deletes your authentication record",
-                  "Deleting and recreating an account does not reset usage limits or referral eligibility",
-                ]}
-              />
-            </Section>
-          </div>
-
-          <Section icon={Network} title="Subprocessors">
-            <p>The following services process data on our behalf:</p>
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/60 text-left">
-                    <th className="px-4 py-3 font-semibold text-foreground">
-                      Provider
-                    </th>
-                    <th className="px-4 py-3 font-semibold text-foreground">
-                      Purpose
-                    </th>
-                    <th className="px-4 py-3 font-semibold text-foreground">
-                      Data categories
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subprocessors.map((subprocessor, index) => (
-                    <tr
-                      key={subprocessor.name}
-                      className={
-                        index < subprocessors.length - 1
-                          ? "border-b border-border align-top"
-                          : "align-top"
-                      }
-                    >
-                      <td className="whitespace-nowrap px-4 py-3 font-medium text-foreground">
-                        {subprocessor.name}
-                      </td>
-                      <td className="px-4 py-3">{subprocessor.purpose}</td>
-                      <td className="px-4 py-3">
-                        {subprocessor.dataCategories}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Section>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Section icon={Bug} title="Responsible disclosure">
-              <p>
-                Found a security vulnerability in HackerAI? Report it through
-                the <InlineLink href={HELP_CENTER_URL}>help center</InlineLink>.
-                We review all good-faith reports. We don&apos;t run a paid bug
-                bounty program at this time.
-              </p>
-            </Section>
-
-            <Section icon={Activity} title="Incident communication">
-              <p>
-                For availability updates and scheduled maintenance, check the{" "}
-                <InlineLink href={STATUS_PAGE_URL}>
-                  public status page
-                </InlineLink>
-                . If an incident affects your data, we notify affected users
-                through the service and the help center.
-              </p>
-            </Section>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Section icon={Code} title="Source code">
-              <p>
-                HackerAI is developed in the open. The full application source
-                code is public on{" "}
-                <InlineLink href="https://github.com/hackerai-tech/hackerai">
-                  GitHub
-                </InlineLink>
-                , including every change we ship. You can review how prompts,
-                files, and sandbox sessions are handled directly in the code
-                rather than relying on this page alone.
-              </p>
-            </Section>
-
-            <Section icon={BadgeCheck} title="Compliance">
-              <p>
-                HackerAI doesn&apos;t currently hold SOC 2, ISO 27001, or other
-                third-party certifications. The service is offered in beta, as
-                described in our{" "}
-                <InlineLink href="/privacy-policy">Privacy Policy</InlineLink>{" "}
-                and{" "}
-                <InlineLink href="/terms-of-service">
-                  Terms of Service
-                </InlineLink>
-                . We&apos;ll update this page as our compliance program
-                develops.
-              </p>
-            </Section>
-          </div>
-        </div>
-
-        {/* Related documents */}
-        <footer className="mt-12">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { href: "/privacy-policy", label: "Privacy Policy" },
-              { href: "/terms-of-service", label: "Terms of Service" },
-              { href: HELP_CENTER_URL, label: "Help Center" },
-              { href: STATUS_PAGE_URL, label: "Status page" },
-            ].map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 transition-colors hover:bg-muted/60"
-              >
-                <span className="flex items-center gap-3 text-sm font-medium text-foreground">
-                  <FileText className="size-4 text-muted-foreground" />
-                  {link.label}
-                </span>
-                <ExternalLinkIcon className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-              </a>
-            ))}
-          </div>
-          <p className="mt-8 text-center text-xs text-muted-foreground">
-            Questions about security at HackerAI? Contact us through the{" "}
-            <InlineLink href={HELP_CENTER_URL}>help center</InlineLink>.
-          </p>
-        </footer>
+    <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-8">
+      <div className="flex items-baseline gap-4 border-t border-white/20 pt-6">
+        <span
+          aria-hidden="true"
+          className={cn(
+            geistPixel.className,
+            "text-base text-muted-foreground",
+          )}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <h2
+          id={`${id}-heading`}
+          className="text-3xl font-medium tracking-[-0.03em] sm:text-4xl"
+        >
+          {sections[index].title}
+        </h2>
       </div>
-    </main>
+      <div className="mt-6 space-y-4 text-lg leading-8 text-[#b3b3b3]">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function PixelList({ items }: { items: ReactNode[] }) {
+  return (
+    <ul className="space-y-3">
+      {items.map((item, index) => (
+        <li key={index} className="flex items-start gap-3">
+          <span aria-hidden="true" className="mt-3 size-2 shrink-0 bg-white" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -450,7 +107,234 @@ export default function TrustPage() {
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <Header currentPath="/trust" />
-      <TrustContent />
+      <main>
+        <section id="trust-hero" className="relative overflow-hidden">
+          <PixelField
+            variant="fade-down"
+            seed={43}
+            className="absolute inset-x-0 top-0 h-28 sm:h-36"
+          />
+          <div className={cn(shell, "relative pt-36 pb-14 sm:pt-44 sm:pb-20")}>
+            <p className="font-mono text-xs text-muted-foreground">
+              Security &amp; Trust
+            </p>
+            <h1
+              className={cn(
+                display,
+                "mt-5 max-w-6xl text-[clamp(3rem,9vw,8rem)] leading-[0.9]",
+              )}
+            >
+              Where Your Data Goes.
+            </h1>
+            <div className="mt-8 flex flex-wrap items-end justify-between gap-6">
+              <p className="max-w-2xl text-lg leading-8 text-pretty text-muted-foreground">
+                DiggerAI is an AI agent for penetration testing and security
+                work. This page lists the data it processes, where agent
+                commands run, and where that data is stored.
+              </p>
+              <p className="font-mono text-xs text-muted-foreground">
+                Last updated{" "}
+                <time dateTime={PUBLIC_PAGE_LAST_MODIFIED.trust}>
+                  {formatPublicPageDate(PUBLIC_PAGE_LAST_MODIFIED.trust)}
+                </time>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div
+          className={cn(
+            shell,
+            "grid gap-14 pb-24 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-20",
+          )}
+        >
+          <nav
+            aria-label="On this page"
+            className="lg:sticky lg:top-8 lg:self-start"
+          >
+            <p
+              className={cn(
+                geistPixel.className,
+                "inline-block bg-white px-2 py-0.5 text-sm text-black",
+              )}
+            >
+              index.txt
+            </p>
+            <ol className="mt-4 grid grid-cols-1 gap-x-6 border-l border-white/30 sm:grid-cols-2 lg:grid-cols-1">
+              {sections.map((section, index) => (
+                <li key={section.id}>
+                  <a
+                    href={`#${section.id}`}
+                    className={cn(
+                      focusOnDark,
+                      "flex min-h-11 items-center gap-3 pl-4 text-sm text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cn(geistPixel.className, "text-base")}
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    {section.title}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+
+          <div className="min-w-0 space-y-20">
+            <TrustSection id="data">
+              <p>Depending on how you use DiggerAI, the service processes:</p>
+              <PixelList
+                items={[
+                  "Prompts and task messages you send to the agent",
+                  "Files you upload (PDF, CSV, JSON, TXT, Markdown, DOC/DOCX, and PNG/JPEG/WebP/GIF images), including text extracted from them",
+                  "URLs and search queries used when the agent browses or searches the web",
+                  "Terminal commands and their output from agent sandbox sessions",
+                  "Browser screenshots captured inside the agent sandbox",
+                  "Notes and custom instructions you save",
+                  "Account information such as your email address and name",
+                ]}
+              />
+            </TrustSection>
+
+            <TrustSection id="models">
+              <p>
+                Task requests go through InferHub, an OpenRouter-compatible
+                gateway, to the provider behind the model you pick. Your prompt,
+                the relevant conversation context, and tool results are sent to
+                that provider so it can generate a response.
+              </p>
+              <p>
+                When the agent searches the web or opens a URL, Firecrawl runs
+                the search and fetches the page. OpenAI screens message content
+                for moderation.
+              </p>
+              <p>
+                Each provider handles data under its own terms, and whether data
+                is used for training differs between them. We don&apos;t make a
+                blanket promise about training, so check the policy of the
+                provider behind your model.
+              </p>
+            </TrustSection>
+
+            <TrustSection id="execution">
+              <div className="grid gap-6 md:grid-cols-2">
+                <RetroWindow
+                  title="cloud: E2B sandbox"
+                  tone="ink"
+                  bodyClassName="p-5 text-base leading-7 sm:p-6"
+                >
+                  <p>
+                    Cloud Agent sessions run terminal and browser actions in an
+                    isolated E2B sandbox in E2B&apos;s US cluster. Delete your
+                    sandboxes any time from Settings &rarr; Data controls.
+                  </p>
+                </RetroWindow>
+                <RetroWindow
+                  title="local: your machine"
+                  bodyClassName="p-5 text-base leading-7 sm:p-6"
+                >
+                  <p>
+                    DiggerAI Desktop and the Local Agent CLI run commands
+                    directly on your machine with your user&apos;s privileges
+                    and <strong>no isolation</strong>. Use them on a machine set
+                    aside for testing.
+                  </p>
+                </RetroWindow>
+              </div>
+            </TrustSection>
+
+            <TrustSection id="storage">
+              <RetroWindow title="storage.txt" bodyClassName="p-5 sm:p-7">
+                <SpecList
+                  tone="paper"
+                  className="mt-0"
+                  items={[
+                    [
+                      "Database",
+                      "Convex holds account data, tasks, messages, and settings.",
+                    ],
+                    [
+                      "Files",
+                      "Cloudflare R2 holds uploaded files and background task payloads. They are reached through signed links that expire.",
+                    ],
+                    [
+                      "Run by us",
+                      "Background agent runs (Trigger.dev), the live sandbox relay (Centrifugo), and stream resumption (Redis) run on infrastructure we operate, not on a third-party service.",
+                    ],
+                    [
+                      "Regions",
+                      "Requests are not routed by region. Every request uses the same database, the same storage, and E2B's US sandbox cluster.",
+                    ],
+                  ]}
+                />
+              </RetroWindow>
+            </TrustSection>
+
+            <TrustSection id="account">
+              <PixelList
+                items={[
+                  "Sign-in runs on WorkOS AuthKit, so DiggerAI keeps no password database of its own",
+                  <>
+                    You can sign out of every device from Settings &rarr;
+                    Security
+                  </>,
+                ]}
+              />
+            </TrustSection>
+
+            <TrustSection id="billing">
+              <p>
+                Polar is the merchant of record for paid plans. It runs
+                checkout, tax, and receipts, and holds your payment details, so
+                card numbers never reach DiggerAI&apos;s servers. Switch plans,
+                update your card, or cancel from Account settings &rarr; Payment
+                &rarr; Manage, which opens Polar&apos;s customer portal.
+              </p>
+            </TrustSection>
+
+            <TrustSection id="deletion">
+              <PixelList
+                items={[
+                  "Delete individual tasks, or all tasks at once",
+                  "Delete your cloud sandboxes",
+                  "Revoke links to tasks you have shared",
+                  "Delete your account, which removes your database records and your sign-in record",
+                  "Deleting your account does not cancel a Polar subscription, so cancel your plan in the customer portal first",
+                  "Deleting and recreating an account does not reset usage limits or referral eligibility",
+                ]}
+              />
+            </TrustSection>
+
+            <TrustSection id="disclosure">
+              <p>
+                A dedicated security contact for DiggerAI isn&apos;t set up yet.
+                Until it is, please don&apos;t publish details of a
+                vulnerability you find.
+              </p>
+            </TrustSection>
+
+            <TrustSection id="compliance">
+              <p>
+                DiggerAI doesn&apos;t hold SOC 2, ISO 27001, or any other
+                third-party certification. The{" "}
+                <Link href="/privacy-policy" className={inlineLink}>
+                  Privacy Policy
+                </Link>{" "}
+                and{" "}
+                <Link href="/terms-of-service" className={inlineLink}>
+                  Terms of Service
+                </Link>{" "}
+                cover the rest. We&apos;ll update this page if that changes.
+              </p>
+            </TrustSection>
+          </div>
+        </div>
+
+        <PixelField variant="fade-up" seed={71} className="h-24 sm:h-32" />
+      </main>
       <PublicSiteFooter />
     </div>
   );

@@ -79,7 +79,7 @@ const secondRemoteConnection: MockConnection = {
 
 const desktopConnection: MockConnection = {
   connectionId: "conn-desktop-1",
-  name: "HackerAI Desktop",
+  name: "DiggerAI Desktop",
   osInfo: {
     platform: "darwin",
     arch: "arm64",

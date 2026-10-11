@@ -1,4 +1,4 @@
-/** Current HackerAI Pro price retained by grandfathered $20/month customers. */
+/** Current DiggerAI Pro price retained by grandfathered $20/month customers. */
 export const HACKERAI_PRO_20_MONTHLY_PRICE_ID =
   "price_1S7i1qFAn4ulhcn1kyxA8jp6";
 

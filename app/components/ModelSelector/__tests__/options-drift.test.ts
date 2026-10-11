@@ -31,7 +31,7 @@ describe("ModelSelector tier ↔ provider drift", () => {
     expect([...askIds].sort()).toEqual([...agentIds].sort());
   });
 
-  it("HackerAI Standard resolves to GLM 5.3 Flash in both modes", () => {
+  it("DiggerAI Standard resolves to GLM 5.3 Flash in both modes", () => {
     expect(resolveTierToProviderKey("hackerai-standard", "ask")).toBe(
       "model-glm-5.3-flash",
     );
@@ -40,7 +40,7 @@ describe("ModelSelector tier ↔ provider drift", () => {
     );
   });
 
-  it("HackerAI Pro keeps Ask on V4 Pro 0813 and uses V4.1 Flash in Agent", () => {
+  it("DiggerAI Pro keeps Ask on V4 Pro 0813 and uses V4.1 Flash in Agent", () => {
     expect(resolveTierToProviderKey("hackerai-pro", "ask")).toBe(
       "model-deepseek-v4-pro-0813",
     );
@@ -49,7 +49,7 @@ describe("ModelSelector tier ↔ provider drift", () => {
     );
   });
 
-  it("HackerAI Max resolves to the same provider in both modes", () => {
+  it("DiggerAI Max resolves to the same provider in both modes", () => {
     expect(resolveTierToProviderKey("hackerai-max", "ask")).toBe(
       "model-glm-5.3",
     );
@@ -63,8 +63,8 @@ describe("ModelSelector tier ↔ provider drift", () => {
     expect(resolveTierToProviderKey("auto", "agent")).toBeNull();
   });
 
-  it("hover-popup descriptions are present for every HackerAI tier", () => {
-    const tiered = allOptions.filter((o) => o.label.startsWith("HackerAI"));
+  it("hover-popup descriptions are present for every DiggerAI tier", () => {
+    const tiered = allOptions.filter((o) => o.label.startsWith("DiggerAI"));
     expect(tiered.length).toBeGreaterThan(0);
     for (const option of tiered) {
       expect(option.description).toBeTruthy();
@@ -79,7 +79,7 @@ describe("ModelSelector tier ↔ provider drift", () => {
     ).toBe("Z.ai GLM 5.3 Flash");
   });
 
-  it("discloses each mode's provider for HackerAI Pro", () => {
+  it("discloses each mode's provider for DiggerAI Pro", () => {
     expect(
       ASK_MODEL_OPTIONS.find((option) => option.id === "hackerai-pro")
         ?.poweredBy,
@@ -90,7 +90,7 @@ describe("ModelSelector tier ↔ provider drift", () => {
     ).toBe("DeepSeek V4.1 Flash");
   });
 
-  it("discloses GLM 5.3 for HackerAI Max", () => {
+  it("discloses GLM 5.3 for DiggerAI Max", () => {
     expect(
       ASK_MODEL_OPTIONS.find((option) => option.id === "hackerai-max")
         ?.poweredBy,

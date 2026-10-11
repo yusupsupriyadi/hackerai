@@ -95,7 +95,7 @@ it.each([
     const result = loadSubagentSkills({ skills: [skill] });
     if (!result.success) throw new Error(result.error);
     const overrideIndex = result.content.indexOf(
-      "HackerAI runtime override (takes precedence)",
+      "DiggerAI runtime override (takes precedence)",
     );
     expect(overrideIndex).toBeGreaterThan(0);
     expect(result.content.indexOf(correction)).toBeGreaterThan(overrideIndex);

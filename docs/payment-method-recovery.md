@@ -166,8 +166,8 @@ chat after the customer refreshes their entitlement session.
 
 1. Verify the intended account, deployment, custom domain, and environment before
    any configuration or deployment. Never connect a Stripe sandbox to production
-   user data. Preview uses the designated HackerAI Developer Convex deployment and
-   PostHog project `401167`; production uses the designated HackerAI Convex
+   user data. Preview uses the designated DiggerAI Developer Convex deployment and
+   PostHog project `401167`; production uses the designated DiggerAI Convex
    deployment and PostHog project `144137`.
 2. Deploy the additive Convex schema/mutation change before the application handler:
    it accepts `customer.subscription.updated` as a lifecycle event.
@@ -197,14 +197,14 @@ detaches existing methods and has no sandbox guard).
    fail using Stripe's documented test payment methods/test clock. Preserve an old
    failing subscription-level default. Verify `invoice.payment_failed`, delinquent
    status, and the corresponding access hold.
-2. From HackerAI's billing recovery entry point, open the customer portal and select
+2. From DiggerAI's billing recovery entry point, open the customer portal and select
    a successful test card. Confirm `payment_update_opened` followed by
    `payment_method_updated` for that test identity in Preview PostHog.
 3. Read back the customer's default and subscription's default: both must select
    the replacement card. Verify the latest renewal invoice actually reaches
    `paid` with a successful Stripe payment, not just a successful card attachment.
 4. Verify `invoice.paid` delivery succeeds, the subscription returns to an eligible
-   paid state, and `billing_payment_recovered` is emitted. Reload HackerAI, submit
+   paid state, and `billing_payment_recovered` is emitted. Reload DiggerAI, submit
    a bounded test chat, and confirm it completes through the formerly held access
    path. Card selection alone must never restore access.
 5. Replay the same customer/subscription/invoice deliveries: no second successful
